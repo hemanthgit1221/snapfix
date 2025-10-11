@@ -23,7 +23,9 @@ public class AuthController {
         }
         
         User user = (User) authentication.getPrincipal();
-        UserResponse response = convertToUserResponse(user);
+        // Refresh user data from database to get latest points and other info
+        User updatedUser = userService.findById(user.getId()).orElse(user);
+        UserResponse response = convertToUserResponse(updatedUser);
         return ResponseEntity.ok(response);
     }
     

@@ -23,6 +23,7 @@ import java.util.Optional;
 @RequestMapping("/api/tickets")
 @CrossOrigin(origins = "*")
 public class TicketController {
+    // Ticket management REST controller
     
     @Autowired
     private TicketService ticketService;
