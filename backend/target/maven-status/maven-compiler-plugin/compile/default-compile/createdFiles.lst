@@ -1,0 +1,10 @@
+com\snapfix\entity\UserRole.class
+com\snapfix\entity\Reward.class
+com\snapfix\entity\TicketPriority.class
+com\snapfix\entity\Ticket.class
+com\snapfix\entity\TicketCategory.class
+com\snapfix\entity\VoucherStatus.class
+com\snapfix\SnapFixBackendApplication.class
+com\snapfix\entity\TicketComment.class
+com\snapfix\entity\User.class
+com\snapfix\entity\TicketStatus.class
