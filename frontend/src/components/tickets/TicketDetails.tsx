@@ -228,7 +228,7 @@ const TicketDetails: React.FC = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Issue Photo</h2>
             <img
               src={ticket.photoUrl}
-              alt="Ticket photo"
+              alt="Issue"
               className="w-full h-64 object-cover rounded-lg"
             />
           </motion.div>

@@ -9,7 +9,6 @@ import {
   CalendarIcon,
   MapPinIcon,
   TagIcon,
-  ChatBubbleLeftIcon,
   PhotoIcon
 } from '@heroicons/react/24/outline';
 import { Ticket, TicketStatus } from '../../types';
@@ -454,7 +453,7 @@ const StaffDashboard: React.FC = () => {
             
             <img
               src={selectedTicket.photoUrl}
-              alt="Ticket photo"
+              alt="Ticket issue"
               className="w-full h-96 object-cover rounded-lg"
             />
             

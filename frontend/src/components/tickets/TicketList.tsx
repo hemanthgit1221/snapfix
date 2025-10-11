@@ -260,7 +260,7 @@ const TicketList: React.FC = () => {
                 <div className="lg:w-48 flex-shrink-0">
                   <img
                     src={ticket.photoUrl}
-                    alt="Ticket photo"
+                    alt="Issue"
                     className="w-full h-32 object-cover rounded-lg"
                   />
                 </div>

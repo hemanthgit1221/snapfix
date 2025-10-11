@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { UserRole } from './types';
 import Login from './components/auth/Login';
 import Dashboard from './components/dashboard/Dashboard';
 import TicketList from './components/tickets/TicketList';
@@ -49,21 +50,21 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/admin" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'DEPARTMENT_HEAD']}>
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.DEPARTMENT_HEAD]}>
                 <Layout>
                   <AdminDashboard />
                 </Layout>
               </ProtectedRoute>
             } />
             <Route path="/staff" element={
-              <ProtectedRoute allowedRoles={['STAFF']}>
+              <ProtectedRoute allowedRoles={[UserRole.STAFF]}>
                 <Layout>
                   <StaffDashboard />
                 </Layout>
               </ProtectedRoute>
             } />
             <Route path="/analytics" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'DEPARTMENT_HEAD']}>
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.DEPARTMENT_HEAD]}>
                 <Layout>
                   <Analytics />
                 </Layout>

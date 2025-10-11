@@ -4,9 +4,9 @@ export interface User {
   email: string;
   role: UserRole;
   points: number;
-  supabaseUserId: string;
-  createdAt: string;
-  updatedAt: string;
+  supabaseUserId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export enum UserRole {

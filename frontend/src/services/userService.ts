@@ -160,7 +160,7 @@ export const userService = {
   },
 
   async bulkDeleteUsers(userIds: number[]): Promise<ApiResponse<void>> {
-    return apiClient.delete<void>('/users/bulk', { body: JSON.stringify({ userIds }) });
+    return apiClient.post<void>('/users/bulk-delete', { userIds });
   },
 
   // Export users (admin only)

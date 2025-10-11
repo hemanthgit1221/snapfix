@@ -12,7 +12,7 @@ import {
 const Analytics: React.FC = () => {
   const [timeRange, setTimeRange] = useState('7d');
   const [loading, setLoading] = useState(true);
-  const [analyticsData, setAnalyticsData] = useState({
+  const [analyticsData] = useState({
     ticketsByCategory: {
       PLUMBING: 45,
       ELECTRICAL: 32,

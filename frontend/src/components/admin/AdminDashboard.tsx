@@ -10,7 +10,7 @@ import {
   CogIcon,
   UserPlusIcon
 } from '@heroicons/react/24/outline';
-import { Ticket, User, TicketStatus } from '../../types';
+import { Ticket, TicketStatus } from '../../types';
 
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState({

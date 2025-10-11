@@ -147,7 +147,7 @@ export const rewardService = {
   },
 
   async bulkDeleteRewards(rewardIds: number[]): Promise<ApiResponse<void>> {
-    return apiClient.delete<void>('/rewards/bulk', { body: JSON.stringify({ rewardIds }) });
+    return apiClient.post<void>('/rewards/bulk-delete', { rewardIds });
   },
 
   // Export data
