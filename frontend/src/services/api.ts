@@ -265,11 +265,21 @@ export const dashboardApi = {
 
   // Get staff members for assignment
   async getStaffMembers(): Promise<ApiResponse<any[]>> {
-    return apiClient.get<any[]>('/tickets/staff');
+    return apiClient.get<any[]>('/users/staff');
   },
 
   // Create new staff member
   async createStaffMember(staffData: { name: string; email: string; password: string; role: string }): Promise<ApiResponse<any>> {
-    return apiClient.post<any>('/tickets/staff', staffData);
+    return apiClient.post<any>('/users', staffData);
+  },
+
+  // Update staff member
+  async updateStaffMember(id: number, staffData: { name: string; email: string; password?: string; role: string }): Promise<ApiResponse<any>> {
+    return apiClient.put<any>(`/users/${id}`, staffData);
+  },
+
+  // Delete staff member
+  async deleteStaffMember(id: number): Promise<ApiResponse<any>> {
+    return apiClient.delete<any>(`/users/${id}`);
   }
 };

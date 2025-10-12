@@ -97,7 +97,15 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
     
-    private UserResponse convertToUserResponse(User user) {
+    public User save(User user) {
+        return userRepository.save(user);
+    }
+    
+    public void deleteById(Long id) {
+        userRepository.deleteById(id);
+    }
+    
+    public UserResponse convertToUserResponse(User user) {
         UserResponse response = new UserResponse();
         response.setId(user.getId());
         response.setName(user.getName());

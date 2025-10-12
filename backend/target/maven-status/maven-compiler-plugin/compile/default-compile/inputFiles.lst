@@ -19,6 +19,7 @@ C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\SnapFixBa
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\repository\TicketCommentRepository.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\service\StorageService.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\controller\TicketController.java
+C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\controller\UserController.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\controller\AuthController.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\dto\TicketResponse.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\entity\TicketComment.java

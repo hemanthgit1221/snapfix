@@ -24,6 +24,8 @@ const StaffManagement: React.FC = () => {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('ALL');
   
@@ -94,6 +96,55 @@ const StaffManagement: React.FC = () => {
       alert('Failed to create staff member. Please try again.');
     } finally {
       setAddingStaff(false);
+    }
+  };
+
+  const handleEditStaff = (staffMember: StaffMember) => {
+    setEditingStaff(staffMember);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateStaff = async (updatedStaff: any) => {
+    if (!editingStaff) return;
+
+    try {
+      const response = await dashboardApi.updateStaffMember(editingStaff.id, updatedStaff);
+      console.log('Update response:', response);
+      
+      // Check if response has success property or if it's the user data directly
+      if (response.success || (response as any).id) {
+        window.location.reload(); // Refresh the list
+        setShowEditModal(false);
+        setEditingStaff(null);
+        alert('Staff member updated successfully!');
+      } else {
+        alert('Failed to update staff member');
+      }
+    } catch (error) {
+      console.error('Error updating staff member:', error);
+      alert('Failed to update staff member');
+    }
+  };
+
+  const handleDeleteStaff = async (staffId: number) => {
+    if (!window.confirm('Are you sure you want to delete this staff member?')) {
+      return;
+    }
+
+    try {
+      const response = await dashboardApi.deleteStaffMember(staffId);
+      console.log('Delete response:', response);
+      
+      // Check if response has success property or if it's the message directly
+      if (response.success || response.data?.message) {
+        window.location.reload(); // Refresh the list
+        alert('Staff member deleted successfully!');
+      } else {
+        alert('Failed to delete staff member');
+      }
+    } catch (error) {
+      console.error('Error deleting staff member:', error);
+      alert('Failed to delete staff member');
     }
   };
 
@@ -267,10 +318,18 @@ const StaffManagement: React.FC = () => {
                 </div>
                 
                 <div className="flex gap-2">
-                  <button className="p-2 text-gray-400 hover:text-primary-600 transition-colors">
+                  <button 
+                    onClick={() => handleEditStaff(member)}
+                    className="p-2 text-gray-400 hover:text-primary-600 transition-colors"
+                    title="Edit staff member"
+                  >
                     <PencilIcon className="h-4 w-4" />
                   </button>
-                  <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                  <button 
+                    onClick={() => handleDeleteStaff(member.id)}
+                    className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                    title="Delete staff member"
+                  >
                     <TrashIcon className="h-4 w-4" />
                   </button>
                 </div>
@@ -351,7 +410,140 @@ const StaffManagement: React.FC = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Edit Staff Modal */}
+      {showEditModal && editingStaff && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Edit Staff Member</h3>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <EditStaffForm
+                staff={editingStaff}
+                onSave={handleUpdateStaff}
+                onCancel={() => setShowEditModal(false)}
+              />
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
+  );
+};
+
+// Edit Staff Form Component
+interface EditStaffFormProps {
+  staff: StaffMember;
+  onSave: (staffData: any) => void;
+  onCancel: () => void;
+}
+
+const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    name: staff.name,
+    email: staff.email,
+    role: staff.role,
+    password: ''
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.email) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onSave(formData);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({...formData, name: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          placeholder="Enter full name"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+        <input
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({...formData, email: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          placeholder="Enter email address"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+        <select 
+          value={formData.role}
+          onChange={(e) => setFormData({...formData, role: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          required
+        >
+          <option value="STAFF">Staff</option>
+          <option value="DEPARTMENT_HEAD">Department Head</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+        <input
+          type="password"
+          value={formData.password}
+          onChange={(e) => setFormData({...formData, password: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          placeholder="Leave blank to keep current password"
+        />
+        <p className="text-xs text-gray-500 mt-1">Leave blank to keep the current password</p>
+      </div>
+      
+      <div className="flex gap-3 mt-6">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
   );
 };
 

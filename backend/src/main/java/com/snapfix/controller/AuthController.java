@@ -7,6 +7,7 @@ import com.snapfix.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,6 +20,9 @@ public class AuthController {
     
     @Autowired
     private JwtService jwtService;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     @GetMapping("/test")
     public ResponseEntity<String> test() {
@@ -50,9 +54,14 @@ public class AuthController {
             
             System.out.println("User found: " + user.getName() + " (" + user.getEmail() + ")");
             
-            // Verify password (simple comparison for testing)
-            if (!request.getPassword().equals(user.getPassword())) {
-                System.out.println("Invalid password for user: " + user.getEmail());
+            // Verify password using BCrypt
+            System.out.println("🔐 Password verification for user: " + user.getEmail());
+            System.out.println("🔐 Provided password: " + request.getPassword());
+            System.out.println("🔐 Stored password hash: " + user.getPassword());
+            System.out.println("🔐 Password matches: " + passwordEncoder.matches(request.getPassword(), user.getPassword()));
+            
+            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                System.out.println("❌ Invalid password for user: " + user.getEmail());
                 return ResponseEntity.status(401).body("Invalid credentials");
             }
             
