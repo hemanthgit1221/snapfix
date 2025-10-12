@@ -11,7 +11,8 @@ import {
   UserGroupIcon,
   UsersIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 
@@ -26,10 +27,11 @@ const Sidebar: React.FC = () => {
     { name: 'My Tickets', href: '/tickets', icon: TicketIcon },
     { name: 'Create Ticket', href: '/tickets/create', icon: PlusIcon },
     { name: 'Rewards', href: '/rewards', icon: GiftIcon },
+    { name: 'Settings', href: '/settings', icon: CogIcon },
   ];
 
   const adminNavigation = [
-    { name: 'Admin Panel', href: '/admin', icon: CogIcon },
+    { name: 'Admin Panel', href: '/admin', icon: UserIcon },
     { name: 'All Tickets', href: '/admin/tickets', icon: TicketIcon },
     { name: 'Staff Management', href: '/admin/staff', icon: UsersIcon },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },

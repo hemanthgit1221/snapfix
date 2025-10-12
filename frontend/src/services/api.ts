@@ -281,5 +281,10 @@ export const dashboardApi = {
   // Delete staff member
   async deleteStaffMember(id: number): Promise<ApiResponse<any>> {
     return apiClient.delete<any>(`/users/${id}`);
+  },
+
+  // Change password
+  async changePassword(passwordData: { currentPassword: string; newPassword: string }): Promise<ApiResponse<string>> {
+    return apiClient.post<string>('/auth/change-password', passwordData);
   }
 };

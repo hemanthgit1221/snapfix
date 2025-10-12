@@ -10,6 +10,7 @@ import {
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { dashboardApi } from '../../services/api';
+import PasswordInput from '../common/PasswordInput';
 
 interface StaffMember {
   id: number;
@@ -383,11 +384,9 @@ const StaffManagement: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={newStaff.password}
                   onChange={(e) => setNewStaff({...newStaff, password: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Enter temporary password"
                 />
               </div>
@@ -517,11 +516,9 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onSave, onCancel }
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-        <input
-          type="password"
+        <PasswordInput
           value={formData.password}
           onChange={(e) => setFormData({...formData, password: e.target.value})}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
           placeholder="Leave blank to keep current password"
         />
         <p className="text-xs text-gray-500 mt-1">Leave blank to keep the current password</p>

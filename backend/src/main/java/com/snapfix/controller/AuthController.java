@@ -2,6 +2,8 @@ package com.snapfix.controller;
 
 import com.snapfix.dto.UserResponse;
 import com.snapfix.entity.User;
+import com.snapfix.entity.UserRole;
+import com.snapfix.repository.UserRepository;
 import com.snapfix.service.UserService;
 import com.snapfix.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -23,6 +26,9 @@ public class AuthController {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private UserRepository userRepository;
     
     @GetMapping("/test")
     public ResponseEntity<String> test() {
@@ -85,6 +91,82 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
     
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request, Authentication authentication) {
+        try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized", "message", "Authentication required"));
+            }
+            
+            User user = (User) authentication.getPrincipal();
+            
+            // Verify current password
+            if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                return ResponseEntity.status(400).body(Map.of("error", "Invalid Password", "message", "Current password is incorrect"));
+            }
+            
+            // Update password
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            userService.save(user);
+            
+            System.out.println("✅ Password changed successfully for user: " + user.getEmail());
+            return ResponseEntity.ok(Map.of("success", true, "message", "Password changed successfully"));
+            
+        } catch (Exception e) {
+            System.out.println("❌ Failed to change password: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Server Error", "message", "Failed to change password"));
+        }
+    }
+    
+    @PostMapping("/fix-passwords")
+    public ResponseEntity<?> fixPasswords() {
+        try {
+            String defaultPassword = "123456";
+            String encodedPassword = passwordEncoder.encode(defaultPassword);
+            
+            System.out.println("🔐 Fixing passwords with encrypted version...");
+            System.out.println("🔐 Default password: " + defaultPassword);
+            System.out.println("🔐 Encoded password: " + encodedPassword);
+            
+            // Fix Admin User
+            User adminUser = userRepository.findByEmail("admin@snapfix.com").orElse(new User());
+            adminUser.setName("Admin User");
+            adminUser.setEmail("admin@snapfix.com");
+            adminUser.setPassword(encodedPassword);
+            adminUser.setRole(UserRole.ADMIN);
+            adminUser.setPoints(0);
+            userRepository.save(adminUser);
+            System.out.println("✅ Admin user fixed: admin@snapfix.com");
+            
+            // Fix Student User
+            User studentUser = userRepository.findByEmail("student@snapfix.com").orElse(new User());
+            studentUser.setName("Student User");
+            studentUser.setEmail("student@snapfix.com");
+            studentUser.setPassword(encodedPassword);
+            studentUser.setRole(UserRole.STUDENT);
+            studentUser.setPoints(100);
+            userRepository.save(studentUser);
+            System.out.println("✅ Student user fixed: student@snapfix.com");
+            
+            // Fix Staff User
+            User staffUser = userRepository.findByEmail("staff@snapfix.com").orElse(new User());
+            staffUser.setName("Staff User");
+            staffUser.setEmail("staff@snapfix.com");
+            staffUser.setPassword(encodedPassword);
+            staffUser.setRole(UserRole.STAFF);
+            staffUser.setPoints(0);
+            userRepository.save(staffUser);
+            System.out.println("✅ Staff user fixed: staff@snapfix.com");
+            
+            return ResponseEntity.ok("All passwords fixed! Default password: 123456");
+        } catch (Exception e) {
+            System.out.println("❌ Error fixing passwords: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error fixing passwords: " + e.getMessage());
+        }
+    }
+    
     private UserResponse convertToUserResponse(User user) {
         UserResponse response = new UserResponse();
         response.setId(user.getId());
@@ -141,6 +223,28 @@ public class AuthController {
         
         public void setToken(String token) {
             this.token = token;
+        }
+    }
+    
+    // Inner class for change password request
+    public static class ChangePasswordRequest {
+        private String currentPassword;
+        private String newPassword;
+        
+        public String getCurrentPassword() {
+            return currentPassword;
+        }
+        
+        public void setCurrentPassword(String currentPassword) {
+            this.currentPassword = currentPassword;
+        }
+        
+        public String getNewPassword() {
+            return newPassword;
+        }
+        
+        public void setNewPassword(String newPassword) {
+            this.newPassword = newPassword;
         }
     }
 }

@@ -1,4 +1,5 @@
 com\snapfix\config\WebConfig.class
+com\snapfix\service\DataInitializationService.class
 com\snapfix\service\JwtService.class
 com\snapfix\controller\UserController$UpdateUserRequest.class
 com\snapfix\controller\AuthController$LoginRequest.class
@@ -14,6 +15,7 @@ com\snapfix\repository\UserRepository.class
 com\snapfix\controller\FileController.class
 com\snapfix\entity\Reward.class
 com\snapfix\entity\TicketPriority.class
+com\snapfix\controller\AuthController$ChangePasswordRequest.class
 com\snapfix\entity\Ticket.class
 com\snapfix\dto\CreateTicketRequest.class
 com\snapfix\entity\TicketComment.class
