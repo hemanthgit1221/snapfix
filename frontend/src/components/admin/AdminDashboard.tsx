@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { dashboardApi, AdminStats, Ticket } from '../../services/api';
+import AssignTicketModal from './AssignTicketModal';
 import { 
   TicketIcon, 
   UserGroupIcon, 
@@ -10,10 +13,11 @@ import {
   CogIcon,
   UserPlusIcon
 } from '@heroicons/react/24/outline';
-import { Ticket, TicketStatus } from '../../types';
+import { TicketStatus } from '../../types';
 
 const AdminDashboard: React.FC = () => {
-  const [stats, setStats] = useState({
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<AdminStats>({
     totalTickets: 0,
     pendingTickets: 0,
     inProgressTickets: 0,
@@ -23,76 +27,36 @@ const AdminDashboard: React.FC = () => {
   });
   const [recentTickets, setRecentTickets] = useState<Ticket[]>([]);
   const [unassignedTickets, setUnassignedTickets] = useState<Ticket[]>([]);
+  const [pendingTickets, setPendingTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      setLoading(true);
-      // Simulate API calls
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      setStats({
-        totalTickets: 156,
-        pendingTickets: 23,
-        inProgressTickets: 12,
-        resolvedTickets: 121,
-        totalUsers: 89,
-        activeStaff: 8
-      });
-
-      setRecentTickets([
-        {
-          id: 1,
-          ticketId: 'SF2024001',
-          user: { id: 1, name: 'John Doe', email: 'john@example.com', role: 'STUDENT' as any, points: 150 },
-          photoUrl: '/api/placeholder/300/200',
-          roomNumber: '101',
-          floor: '1st',
-          building: 'Main Building',
-          category: 'ELECTRICAL' as any,
-          description: 'Light not working in room 101',
-          status: TicketStatus.PENDING,
-          priority: 'MEDIUM' as any,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          ticketId: 'SF2024002',
-          user: { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'FACULTY' as any, points: 200 },
-          photoUrl: '/api/placeholder/300/200',
-          roomNumber: '205',
-          floor: '2nd',
-          building: 'Science Block',
-          category: 'PLUMBING' as any,
-          description: 'Leaky faucet in laboratory',
-          status: TicketStatus.IN_PROGRESS,
-          priority: 'HIGH' as any,
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      ]);
-
-      setUnassignedTickets([
-        {
-          id: 3,
-          ticketId: 'SF2024003',
-          user: { id: 3, name: 'Mike Johnson', email: 'mike@example.com', role: 'STUDENT' as any, points: 75 },
-          photoUrl: '/api/placeholder/300/200',
-          roomNumber: '301',
-          floor: '3rd',
-          building: 'Main Building',
-          category: 'AC_WATER' as any,
-          description: 'AC not cooling properly',
-          status: TicketStatus.PENDING,
-          priority: 'LOW' as any,
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      ]);
-
-      setLoading(false);
+      try {
+        setLoading(true);
+        
+        // Fetch all data in parallel
+        const [statsResponse, recentTicketsResponse, unassignedTicketsResponse] = await Promise.all([
+          dashboardApi.getAdminStats(),
+          dashboardApi.getAllTickets(),
+          dashboardApi.getUnassignedTickets()
+        ]);
+        
+        const allTickets = recentTicketsResponse as any;
+        const pendingTicketsFiltered = allTickets.filter((ticket: any) => ticket.status === 'PENDING');
+        
+        setStats(statsResponse as any);
+        setRecentTickets(allTickets.slice(0, 5)); // Show 5 most recent
+        setUnassignedTickets(unassignedTicketsResponse as any);
+        setPendingTickets(pendingTicketsFiltered);
+      } catch (err: any) {
+        console.error('Failed to fetch admin dashboard data:', err);
+        // Keep existing mock data on error
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchDashboardData();
@@ -155,10 +119,16 @@ const AdminDashboard: React.FC = () => {
         return 'bg-yellow-100 text-yellow-800';
       case TicketStatus.IN_PROGRESS:
         return 'bg-blue-100 text-blue-800';
+      case TicketStatus.AT_SITE:
+        return 'bg-purple-100 text-purple-800';
+      case TicketStatus.WAITING_FOR_MATERIAL:
+        return 'bg-orange-100 text-orange-800';
       case TicketStatus.RESOLVED:
         return 'bg-green-100 text-green-800';
       case TicketStatus.CLOSED:
         return 'bg-gray-100 text-gray-800';
+      case TicketStatus.REJECTED:
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -177,6 +147,67 @@ const AdminDashboard: React.FC = () => {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleAssignTicket = async (ticket: any) => {
+    setSelectedTicket(ticket);
+    setShowAssignModal(true);
+  };
+
+  const handleReviewTicket = async (ticket: any) => {
+    // Navigate to ticket details for review and approval
+    navigate(`/tickets/${ticket.ticketId}`, { state: { reviewMode: true, fromAdmin: true } });
+  };
+
+  const handleAssignToStaff = async (staffId: number) => {
+    if (!selectedTicket) return;
+    
+    try {
+      console.log(`🔄 Starting assignment: Ticket ${selectedTicket.id} to staff ${staffId}`);
+      
+      // Call the actual assignment API
+      const assignmentResult = await dashboardApi.assignTicket(selectedTicket.id, staffId);
+      console.log('✅ Assignment API response:', assignmentResult);
+      
+      console.log('✅ Ticket assigned successfully');
+      
+      // Refresh all data to reflect the changes
+      console.log('🔄 Refreshing dashboard data...');
+      const [statsResponse, ticketsResponse, unassignedResponse] = await Promise.all([
+        dashboardApi.getAdminStats(),
+        dashboardApi.getAllTickets(),
+        dashboardApi.getUnassignedTickets()
+      ]);
+      
+      const allTickets = ticketsResponse as any;
+      const pendingTicketsFiltered = allTickets.filter((ticket: any) => ticket.status === 'PENDING');
+      
+      console.log('📊 Updated data:', {
+        stats: statsResponse,
+        allTickets: allTickets.length,
+        unassignedTickets: (unassignedResponse as any).length,
+        pendingTickets: pendingTicketsFiltered.length
+      });
+      
+      setStats(statsResponse as any);
+      setRecentTickets((allTickets || []).slice(0, 5));
+      setUnassignedTickets((unassignedResponse as any) || []);
+      setPendingTickets(pendingTicketsFiltered);
+      
+      // Close the modal
+      setShowAssignModal(false);
+      setSelectedTicket(null);
+      
+    } catch (error) {
+      console.error('Failed to assign ticket:', error);
+      // You could add a toast notification here to show the error to the user
+    }
+  };
+
+  const handleStaffUpdate = async () => {
+    // This function can be called to refresh staff data in the modal
+    // For now, we don't need to do anything specific here since the modal handles its own refresh
+    console.log('Staff data updated in modal');
   };
 
   if (loading) {
@@ -212,11 +243,17 @@ const AdminDashboard: React.FC = () => {
             <p className="text-gray-600 mt-2">Manage tickets, assignments, and analytics</p>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            <button 
+              onClick={() => navigate('/analytics')}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
               <ChartBarIcon className="h-5 w-5" />
               Analytics
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+            <button 
+              onClick={() => navigate('/admin/settings')}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
               <CogIcon className="h-5 w-5" />
               Settings
             </button>
@@ -249,9 +286,9 @@ const AdminDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Main Content Grid */}
+      {/* Main Content Grid - Two Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Tickets */}
+        {/* Pending Tickets for Review - Left Column */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -259,74 +296,25 @@ const AdminDashboard: React.FC = () => {
           className="bg-white rounded-xl shadow-sm p-6"
         >
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 font-poppins">Recent Tickets</h2>
-            <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-              View All
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            {recentTickets.map((ticket, index) => (
-              <motion.div
-                key={ticket.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
-                className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
-              >
-                <img
-                  src={ticket.photoUrl}
-                  alt="Ticket"
-                  className="w-12 h-12 object-cover rounded-lg"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {ticket.ticketId}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {ticket.roomNumber} • {ticket.user.name}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                    {ticket.status.replace('_', ' ')}
-                  </span>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
-                    {ticket.priority}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Unassigned Tickets */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl shadow-sm p-6"
-        >
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 font-poppins">Unassigned Tickets</h2>
-            <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-              {unassignedTickets.length} pending
+            <h2 className="text-lg font-semibold text-gray-900 font-poppins">Tickets Pending Review</h2>
+            <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+              {pendingTickets.length} need approval
             </span>
           </div>
           
           <div className="space-y-4">
-            {unassignedTickets.length === 0 ? (
+            {pendingTickets.length === 0 ? (
               <div className="text-center py-8">
                 <CheckCircleIcon className="mx-auto h-12 w-12 text-green-400 mb-4" />
-                <p className="text-gray-500">All tickets are assigned!</p>
+                <p className="text-gray-500">No tickets need review!</p>
               </div>
             ) : (
-              unassignedTickets.map((ticket, index) => (
+              pendingTickets.map((ticket, index) => (
                 <motion.div
                   key={ticket.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
+                  transition={{ delay: 0.4 + index * 0.1 }}
                   className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
                 >
                   <div className="flex items-center space-x-3">
@@ -344,7 +332,67 @@ const AdminDashboard: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                  <button 
+                    onClick={() => handleReviewTicket(ticket)}
+                    className="px-3 py-1 bg-yellow-600 text-white text-xs rounded-md hover:bg-yellow-700 transition-colors"
+                  >
+                    Review & Approve
+                  </button>
+                </motion.div>
+              ))
+            )}
+          </div>
+        </motion.div>
+
+        {/* Approved & Unassigned Tickets - Right Column */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-xl shadow-sm p-6"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 font-poppins">Approved & Unassigned Tickets</h2>
+            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+              {unassignedTickets.length} ready for assignment
+            </span>
+          </div>
+          
+          <div className="space-y-4">
+            {unassignedTickets.length === 0 ? (
+              <div className="text-center py-8">
+                <CheckCircleIcon className="mx-auto h-12 w-12 text-green-400 mb-4" />
+                <p className="text-gray-500">No approved tickets need assignment!</p>
+              </div>
+            ) : (
+              unassignedTickets.map((ticket, index) => (
+                <motion.div
+                  key={ticket.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 + index * 0.1 }}
+                  className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src={ticket.photoUrl}
+                      alt="Ticket"
+                      className="w-10 h-10 object-cover rounded-lg"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {ticket.ticketId}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {ticket.roomNumber} • {ticket.category}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handleAssignTicket(ticket)}
+                    className="text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors"
+                    title="Assign to staff member"
+                  >
                     Assign
                   </button>
                 </motion.div>
@@ -353,6 +401,73 @@ const AdminDashboard: React.FC = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Tickets - Full Width Bottom */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="bg-white rounded-xl shadow-sm p-6"
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 font-poppins">Tickets</h2>
+          <button 
+            onClick={() => navigate('/admin/tickets')}
+            className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+          >
+            View All
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          {recentTickets.length === 0 ? (
+            <div className="text-center py-8">
+              <TicketIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <p className="text-gray-500">No tickets found</p>
+            </div>
+          ) : (
+            recentTickets.map((ticket, index) => (
+              <motion.div
+                key={ticket.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + index * 0.1 }}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                onClick={() => navigate(`/tickets/${ticket.ticketId}`, { state: { fromAdmin: true } })}
+              >
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={ticket.photoUrl}
+                    alt="Ticket"
+                    className="w-12 h-12 object-cover rounded-lg"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {ticket.ticketId}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {ticket.roomNumber} • {ticket.user.name}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-2">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status as TicketStatus)}`}>
+                      {ticket.status.replace('_', ' ')}
+                    </span>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
+                      {ticket.priority}
+                    </span>
+                  </div>
+                  <span className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                    View Details →
+                  </span>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
+      </motion.div>
 
       {/* Quick Actions */}
       <motion.div
@@ -363,28 +478,40 @@ const AdminDashboard: React.FC = () => {
       >
         <h2 className="text-lg font-semibold text-gray-900 font-poppins mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <button className="flex items-center space-x-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+          <button 
+            onClick={() => navigate('/tickets')}
+            className="flex items-center space-x-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+          >
             <div className="p-2 bg-blue-500 rounded-lg">
               <TicketIcon className="h-5 w-5 text-white" />
             </div>
             <span className="font-medium text-gray-900">View All Tickets</span>
           </button>
           
-          <button className="flex items-center space-x-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+          <button 
+            onClick={() => navigate('/admin/users')}
+            className="flex items-center space-x-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+          >
             <div className="p-2 bg-green-500 rounded-lg">
               <UserGroupIcon className="h-5 w-5 text-white" />
             </div>
             <span className="font-medium text-gray-900">Manage Users</span>
           </button>
           
-          <button className="flex items-center space-x-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+          <button 
+            onClick={() => navigate('/analytics')}
+            className="flex items-center space-x-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+          >
             <div className="p-2 bg-purple-500 rounded-lg">
               <ChartBarIcon className="h-5 w-5 text-white" />
             </div>
             <span className="font-medium text-gray-900">View Analytics</span>
           </button>
           
-          <button className="flex items-center space-x-3 p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors">
+          <button 
+            onClick={() => navigate('/admin/settings')}
+            className="flex items-center space-x-3 p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
+          >
             <div className="p-2 bg-orange-500 rounded-lg">
               <CogIcon className="h-5 w-5 text-white" />
             </div>
@@ -392,6 +519,28 @@ const AdminDashboard: React.FC = () => {
           </button>
         </div>
       </motion.div>
+
+      {/* Assign Ticket Modal */}
+      {selectedTicket && (
+        <AssignTicketModal
+          isOpen={showAssignModal}
+          onClose={() => {
+            setShowAssignModal(false);
+            setSelectedTicket(null);
+          }}
+          onAssign={handleAssignToStaff}
+          ticketId={selectedTicket.ticketId}
+          currentAssignedTo={selectedTicket.assignedTo ? {
+            id: selectedTicket.assignedTo.id,
+            name: selectedTicket.assignedTo.name,
+            email: selectedTicket.assignedTo.email,
+            role: selectedTicket.assignedTo.role,
+            isActive: true
+          } : null}
+          onStaffUpdate={handleStaffUpdate}
+        />
+      )}
+
     </div>
   );
 };

@@ -3,9 +3,11 @@ package com.snapfix.controller;
 import com.snapfix.dto.UserResponse;
 import com.snapfix.entity.User;
 import com.snapfix.service.UserService;
+import com.snapfix.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,6 +17,18 @@ public class AuthController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private JwtService jwtService;
+    
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        System.out.println("Test endpoint called");
+        return ResponseEntity.ok("AuthController is working!");
+    }
     
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
@@ -31,9 +45,33 @@ public class AuthController {
     
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        // This will be handled by Spring Security
-        // The actual login logic is in the security configuration
-        return ResponseEntity.ok().build();
+        try {
+            System.out.println("Login attempt for email: " + request.getEmail());
+            
+            // Find user by email
+            User user = userService.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            System.out.println("User found: " + user.getName() + " (" + user.getEmail() + ")");
+            
+            // Verify password (simple comparison for testing)
+            if (!request.getPassword().equals(user.getPassword())) {
+                System.out.println("Invalid password for user: " + user.getEmail());
+                return ResponseEntity.status(401).body("Invalid credentials");
+            }
+            
+            // Generate JWT token
+            String token = jwtService.generateToken(user.getEmail());
+            
+            UserResponse userResponse = convertToUserResponse(user);
+            
+            System.out.println("Login successful for user: " + user.getEmail());
+            return ResponseEntity.ok(new AuthResponse(userResponse, token));
+        } catch (Exception e) {
+            System.out.println("Login failed: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(401).body("Invalid credentials");
+        }
     }
     
     @PostMapping("/logout")
@@ -71,6 +109,33 @@ public class AuthController {
         
         public void setPassword(String password) {
             this.password = password;
+        }
+    }
+    
+    // Inner class for auth response
+    public static class AuthResponse {
+        private UserResponse user;
+        private String token;
+        
+        public AuthResponse(UserResponse user, String token) {
+            this.user = user;
+            this.token = token;
+        }
+        
+        public UserResponse getUser() {
+            return user;
+        }
+        
+        public void setUser(UserResponse user) {
+            this.user = user;
+        }
+        
+        public String getToken() {
+            return token;
+        }
+        
+        public void setToken(String token) {
+            this.token = token;
         }
     }
 }

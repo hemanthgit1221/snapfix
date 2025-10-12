@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthResponse } from '../types';
 import { authService } from '../services/authService';
+import { updateApiClientToken } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -30,10 +31,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userData = await authService.getCurrentUser(storedToken);
           setUser(userData);
           setToken(storedToken);
+          updateApiClientToken(storedToken); // Sync token with API client
         } catch (error) {
           console.error('Failed to validate token:', error);
           localStorage.removeItem('token');
           setToken(null);
+          updateApiClientToken(null); // Clear token from API client
         }
       }
       setIsLoading(false);
@@ -45,12 +48,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log('AuthContext: Attempting login for:', email);
       const response: AuthResponse = await authService.login(email, password);
+      console.log('AuthContext: Login successful, token received:', response.token ? 'YES' : 'NO');
       setUser(response.user);
       setToken(response.token);
       localStorage.setItem('token', response.token);
+      updateApiClientToken(response.token); // Sync token with API client
+      console.log('AuthContext: Token stored and synced with API client');
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('AuthContext: Login failed:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -61,6 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
+    updateApiClientToken(null); // Clear token from API client
   };
 
   const value: AuthContextType = {

@@ -14,11 +14,13 @@ class ApiClient {
   constructor(baseURL: string) {
     this.baseURL = baseURL;
     this.token = localStorage.getItem('token');
+    console.log('ApiClient: Initialized with token:', this.token ? 'YES' : 'NO');
   }
 
   setToken(token: string) {
     this.token = token;
     localStorage.setItem('token', token);
+    console.log('ApiClient: Token set to:', token);
   }
 
   clearToken() {
@@ -44,11 +46,20 @@ class ApiClient {
         ...config.headers,
         Authorization: `Bearer ${this.token}`,
       };
+      console.log('🔑 Request - Authorization header set:', `Bearer ${this.token.substring(0, 20)}...`);
+    } else {
+      console.log('❌ Request - No token available!');
     }
 
     try {
+      console.log('🌐 Making request to:', url);
+      console.log('🌐 Request headers:', config.headers);
       const response = await fetch(url, config);
       const data = await response.json();
+      
+      console.log('🌐 Response status:', response.status);
+      console.log('🌐 Response data:', data);
+      console.log('🌐 Response data type:', typeof data);
 
       if (!response.ok) {
         throw new Error(data.message || 'An error occurred');
@@ -75,6 +86,8 @@ class ApiClient {
   }
 
   async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    console.log('🔑 PUT Request - Token available:', !!this.token);
+    console.log('🔑 PUT Request - Endpoint:', endpoint);
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
@@ -90,22 +103,33 @@ class ApiClient {
     const config: RequestInit = {
       method: 'POST',
       body: formData,
+      headers: {},
     };
 
     if (this.token) {
       config.headers = {
+        ...config.headers,
         Authorization: `Bearer ${this.token}`,
       };
+      console.log('API Upload: Token found, adding Authorization header');
+    } else {
+      console.log('API Upload: No token found!');
     }
 
     try {
+      console.log('API Upload: Making request to:', url);
+      console.log('API Upload: Headers:', config.headers);
+      console.log('API Upload: Token from localStorage:', localStorage.getItem('token'));
       const response = await fetch(url, config);
-      const data = await response.json();
-
+      console.log('API Upload: Response status:', response.status);
+      console.log('API Upload: Response headers:', response.headers);
+      
       if (!response.ok) {
-        throw new Error(data.message || 'Upload failed');
+        const errorData = await response.json().catch(() => ({ message: 'Upload failed' }));
+        throw new Error(errorData.message || `Upload failed with status ${response.status}`);
       }
-
+      
+      const data = await response.json();
       return data;
     } catch (error) {
       if (error instanceof Error) {
@@ -130,3 +154,122 @@ class ApiError extends Error {
 
 export const apiClient = new ApiClient(API_BASE_URL);
 export { ApiError };
+
+// Function to update the API client token
+export const updateApiClientToken = (token: string | null) => {
+  console.log('updateApiClientToken called with:', token ? 'TOKEN' : 'NULL');
+  if (token) {
+    apiClient.setToken(token);
+  } else {
+    apiClient.clearToken();
+  }
+};
+
+// Dashboard API types
+export interface StudentStats {
+  totalTickets: number;
+  pendingTickets: number;
+  inProgressTickets: number;
+  resolvedTickets: number;
+  rewardPoints: number;
+}
+
+export interface AdminStats {
+  totalTickets: number;
+  pendingTickets: number;
+  inProgressTickets: number;
+  resolvedTickets: number;
+  totalUsers: number;
+  activeStaff: number;
+}
+
+export interface Ticket {
+  id: number;
+  ticketId: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    points: number;
+  };
+  photoUrl: string;
+  roomNumber: string;
+  floor: string;
+  building: string;
+  category: string;
+  description: string;
+  status: string;
+  priority: string;
+  assignedTo?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    points: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+}
+
+// Dashboard API functions
+export const dashboardApi = {
+  // Student Dashboard APIs
+  async getStudentStats(): Promise<ApiResponse<StudentStats>> {
+    return apiClient.get<StudentStats>('/tickets/stats');
+  },
+
+  async getStudentTickets(): Promise<ApiResponse<Ticket[]>> {
+    return apiClient.get<Ticket[]>('/tickets');
+  },
+
+  // Admin Dashboard APIs
+  async getAdminStats(): Promise<ApiResponse<AdminStats>> {
+    return apiClient.get<AdminStats>('/tickets/admin/stats');
+  },
+
+  async getAllTickets(): Promise<ApiResponse<Ticket[]>> {
+    return apiClient.get<Ticket[]>('/tickets/active');
+  },
+
+  async getUnassignedTickets(): Promise<ApiResponse<Ticket[]>> {
+    return apiClient.get<Ticket[]>('/tickets/unassigned');
+  },
+
+  async assignTicket(ticketId: number, assignedToId: number): Promise<ApiResponse<Ticket>> {
+    return apiClient.put<Ticket>(`/tickets/${ticketId}/assign?assignedToId=${assignedToId}`);
+  },
+
+  // Staff Dashboard APIs
+  async getStaffStats(): Promise<ApiResponse<Ticket[]>> {
+    return apiClient.get<Ticket[]>('/tickets/assigned');
+  },
+
+  async getAssignedTickets(): Promise<ApiResponse<Ticket[]>> {
+    return apiClient.get<Ticket[]>('/tickets/assigned');
+  },
+
+  async updateTicketStatus(ticketId: number, status: string): Promise<ApiResponse<Ticket>> {
+    return apiClient.put<Ticket>(`/tickets/${ticketId}/status?status=${status}`);
+  },
+
+  // Common APIs
+  async getTicketDetails(ticketId: string): Promise<ApiResponse<Ticket>> {
+    return apiClient.get<Ticket>(`/tickets/ticket/${ticketId}`);
+  },
+
+  async addComment(ticketId: number, comment: string): Promise<ApiResponse<any>> {
+    return apiClient.post<any>(`/tickets/${ticketId}/comments?comment=${comment}`);
+  },
+
+  // Get staff members for assignment
+  async getStaffMembers(): Promise<ApiResponse<any[]>> {
+    return apiClient.get<any[]>('/tickets/staff');
+  },
+
+  // Create new staff member
+  async createStaffMember(staffData: { name: string; email: string; password: string; role: string }): Promise<ApiResponse<any>> {
+    return apiClient.post<any>('/tickets/staff', staffData);
+  }
+};

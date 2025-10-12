@@ -1,0 +1,79 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# Profile-specific configuration for docker environment
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/snapfix
+    username: ${POSTGRES_USER:snapfix_user}
+    password: ${POSTGRES_PASSWORD:snapfix_password}
+    driver-class-name: org.postgresql.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-super-secret-jwt-key-change-this-in-production}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hours
+
+# CORS Configuration
+cors:
+  origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:80}
+
+# Logging Configuration
+logging:
+  level:
+    com.snapfix: ${LOG_LEVEL:INFO}
+    org.springframework.security: WARN
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /app/logs/snapfix.log
+
+# File Storage Configuration
+storage:
+  type: ${STORAGE_TYPE:local}
+  path: ${STORAGE_PATH:/app/uploads}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    db:
+      enabled: true
+

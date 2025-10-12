@@ -50,10 +50,16 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     @Query("SELECT t FROM Ticket t WHERE t.createdAt >= :startDate AND t.createdAt <= :endDate ORDER BY t.createdAt DESC")
     List<Ticket> findByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     
-    @Query("SELECT t FROM Ticket t WHERE t.assignedTo IS NULL AND t.status = 'PENDING' ORDER BY t.createdAt ASC")
+    @Query("SELECT t FROM Ticket t WHERE t.assignedTo IS NULL AND t.status = 'IN_PROGRESS' ORDER BY t.createdAt ASC")
     List<Ticket> findUnassignedTickets();
     
     @Query("SELECT t FROM Ticket t WHERE t.status = 'RESOLVED' AND t.resolvedAt IS NOT NULL " +
            "ORDER BY t.resolvedAt DESC")
     List<Ticket> findRecentlyResolvedTickets();
+    
+    @Query("SELECT COUNT(t) FROM Ticket t WHERE t.assignedTo = :assignedTo AND t.status IN :statuses")
+    long countByAssignedToAndStatusIn(@Param("assignedTo") User assignedTo, @Param("statuses") List<TicketStatus> statuses);
+    
+    @Query("SELECT t FROM Ticket t ORDER BY t.createdAt DESC")
+    List<Ticket> findAllTicketsOrderByCreatedAtDesc();
 }

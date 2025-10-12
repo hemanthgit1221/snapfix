@@ -1,5 +1,7 @@
+com\snapfix\config\WebConfig.class
 com\snapfix\service\JwtService.class
 com\snapfix\controller\AuthController$LoginRequest.class
+com\snapfix\controller\TestController.class
 com\snapfix\entity\User.class
 com\snapfix\service\TicketService.class
 com\snapfix\entity\TicketStatus.class
@@ -8,6 +10,7 @@ com\snapfix\repository\RewardRepository.class
 com\snapfix\dto\TicketResponse.class
 com\snapfix\config\SecurityConfig.class
 com\snapfix\repository\UserRepository.class
+com\snapfix\controller\FileController.class
 com\snapfix\entity\Reward.class
 com\snapfix\entity\TicketPriority.class
 com\snapfix\entity\Ticket.class
@@ -22,6 +25,7 @@ com\snapfix\service\EmailService.class
 com\snapfix\dto\CommentResponse.class
 com\snapfix\entity\VoucherStatus.class
 com\snapfix\SnapFixBackendApplication.class
+com\snapfix\controller\AuthController$AuthResponse.class
 com\snapfix\repository\TicketCommentRepository.class
 com\snapfix\security\JwtAuthenticationEntryPoint.class
 com\snapfix\security\JwtAuthenticationFilter.class

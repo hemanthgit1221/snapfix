@@ -3,10 +3,11 @@ package com.snapfix.controller;
 import com.snapfix.dto.CreateTicketRequest;
 import com.snapfix.dto.TicketResponse;
 import com.snapfix.entity.TicketStatus;
+import com.snapfix.entity.TicketPriority;
+import com.snapfix.entity.TicketCategory;
 import com.snapfix.entity.TicketComment;
 import com.snapfix.entity.User;
 import com.snapfix.service.TicketService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -28,11 +30,25 @@ public class TicketController {
     @Autowired
     private TicketService ticketService;
     
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<TicketResponse> createTicket(
-            @Valid @RequestBody CreateTicketRequest request,
+            @RequestParam String roomNumber,
+            @RequestParam(required = false) String floor,
+            @RequestParam(required = false) String building,
+            @RequestParam TicketCategory category,
+            @RequestParam String description,
+            @RequestParam(required = false) TicketPriority priority,
             @RequestParam(value = "photo", required = false) MultipartFile photo,
             Authentication authentication) {
+        
+        // Create CreateTicketRequest from form parameters
+        CreateTicketRequest request = new CreateTicketRequest();
+        request.setRoomNumber(roomNumber);
+        request.setFloor(floor);
+        request.setBuilding(building);
+        request.setCategory(category);
+        request.setDescription(description);
+        request.setPriority(priority != null ? priority : TicketPriority.MEDIUM);
         
         User currentUser = (User) authentication.getPrincipal();
         TicketResponse response = ticketService.createTicket(request, currentUser, photo);
@@ -55,6 +71,20 @@ public class TicketController {
         User currentUser = (User) authentication.getPrincipal();
         Pageable pageable = PageRequest.of(page, size);
         Page<TicketResponse> tickets = ticketService.getTicketsByUser(currentUser, pageable);
+        return ResponseEntity.ok(tickets);
+    }
+    
+    @GetMapping("/system/all")
+    public ResponseEntity<List<TicketResponse>> getAllTickets(Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        
+        // Only admin and department head can see all tickets
+        if (!currentUser.getRole().name().equals("ADMIN") && 
+            !currentUser.getRole().name().equals("DEPARTMENT_HEAD")) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        List<TicketResponse> tickets = ticketService.getAllTickets();
         return ResponseEntity.ok(tickets);
     }
     
@@ -172,6 +202,45 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
     
+    @GetMapping("/staff")
+    public ResponseEntity<List<User>> getStaffMembers(Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        
+        // Only admin and department head can see staff list
+        if (!currentUser.getRole().name().equals("ADMIN") && 
+            !currentUser.getRole().name().equals("DEPARTMENT_HEAD")) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        List<User> staff = ticketService.getStaffUsers();
+        return ResponseEntity.ok(staff);
+    }
+    
+    @PostMapping("/staff")
+    public ResponseEntity<User> createStaffMember(
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
+        
+        User currentUser = (User) authentication.getPrincipal();
+        
+        // Only admin can create staff members
+        if (!currentUser.getRole().name().equals("ADMIN")) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        try {
+            User newStaff = ticketService.createStaffMember(
+                request.get("name"),
+                request.get("email"),
+                request.get("password"),
+                request.get("role")
+            );
+            return ResponseEntity.ok(newStaff);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
     @PostMapping("/{id}/comments")
     public ResponseEntity<TicketComment> addComment(
             @PathVariable Long id,
@@ -181,6 +250,27 @@ public class TicketController {
         User currentUser = (User) authentication.getPrincipal();
         TicketComment response = ticketService.addComment(id, comment, currentUser);
         return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getTicketStats(Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        Map<String, Object> stats = ticketService.getTicketStats(currentUser);
+        return ResponseEntity.ok(stats);
+    }
+    
+    @GetMapping("/admin/stats")
+    public ResponseEntity<Map<String, Object>> getAdminStats(Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        
+        // Only admin and department head can see admin stats
+        if (!currentUser.getRole().name().equals("ADMIN") && 
+            !currentUser.getRole().name().equals("DEPARTMENT_HEAD")) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        Map<String, Object> stats = ticketService.getAdminStats();
+        return ResponseEntity.ok(stats);
     }
     
     @GetMapping("/{id}/comments")

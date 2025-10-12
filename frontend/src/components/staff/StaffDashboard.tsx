@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { dashboardApi, Ticket } from '../../services/api';
 import { 
   ClipboardDocumentListIcon,
   ClockIcon,
@@ -9,83 +11,51 @@ import {
   CalendarIcon,
   MapPinIcon,
   TagIcon,
-  PhotoIcon
+  PhotoIcon,
+  PencilSquareIcon,
+  EyeIcon,
+  TruckIcon
 } from '@heroicons/react/24/outline';
-import { Ticket, TicketStatus } from '../../types';
+import { TicketStatus } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
+import StatusUpdateModal from './StatusUpdateModal';
 
 const StaffDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [assignedTickets, setAssignedTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<TicketStatus | 'ALL'>('ALL');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [showTicketModal, setShowTicketModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [ticketForStatusUpdate, setTicketForStatusUpdate] = useState<Ticket | null>(null);
 
   useEffect(() => {
     const fetchAssignedTickets = async () => {
-      setLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock assigned tickets data
-      const mockTickets: Ticket[] = [
-        {
-          id: 1,
-          ticketId: 'SF2024001',
-          user: { id: 1, name: 'John Doe', email: 'john@example.com', role: 'STUDENT' as any, points: 150 },
-          photoUrl: '/api/placeholder/300/200',
-          roomNumber: '101',
-          floor: '1st',
-          building: 'Main Building',
-          category: 'ELECTRICAL' as any,
-          description: 'Light not working in room 101',
-          status: TicketStatus.IN_PROGRESS,
-          priority: 'MEDIUM' as any,
-          assignedTo: user!,
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          ticketId: 'SF2024002',
-          user: { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'FACULTY' as any, points: 200 },
-          photoUrl: '/api/placeholder/300/200',
-          roomNumber: '205',
-          floor: '2nd',
-          building: 'Science Block',
-          category: 'PLUMBING' as any,
-          description: 'Leaky faucet in laboratory',
-          status: TicketStatus.PENDING,
-          priority: 'HIGH' as any,
-          assignedTo: user!,
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 3,
-          ticketId: 'SF2024003',
-          user: { id: 3, name: 'Mike Johnson', email: 'mike@example.com', role: 'STUDENT' as any, points: 75 },
-          photoUrl: '/api/placeholder/300/200',
-          roomNumber: '301',
-          floor: '3rd',
-          building: 'Main Building',
-          category: 'AC_WATER' as any,
-          description: 'AC not cooling properly',
-          status: TicketStatus.RESOLVED,
-          priority: 'LOW' as any,
-          assignedTo: user!,
-          createdAt: new Date(Date.now() - 259200000).toISOString(),
-          updatedAt: new Date(Date.now() - 86400000).toISOString(),
-          resolvedAt: new Date(Date.now() - 86400000).toISOString(),
-        }
-      ];
-
-      setAssignedTickets(mockTickets);
-      setLoading(false);
+      try {
+        setLoading(true);
+        
+        const response = await dashboardApi.getAssignedTickets();
+        console.log('🔍 StaffDashboard: Raw API response:', response);
+        console.log('🔍 StaffDashboard: Response type:', typeof response);
+        console.log('🔍 StaffDashboard: Response length:', (response as any)?.length || 'undefined');
+        console.log('🔍 StaffDashboard: Current user:', user);
+        console.log('🔍 StaffDashboard: User role:', user?.role);
+        
+        setAssignedTickets(response as any);
+      } catch (err: any) {
+        console.error('❌ StaffDashboard: Failed to fetch assigned tickets:', err);
+        // Keep empty array on error
+        setAssignedTickets([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchAssignedTickets();
+    if (user) {
+      fetchAssignedTickets();
+    }
   }, [user]);
 
   const filteredTickets = filterStatus === 'ALL' 
@@ -94,20 +64,55 @@ const StaffDashboard: React.FC = () => {
 
   const stats = {
     total: assignedTickets.length,
-    pending: assignedTickets.filter(t => t.status === TicketStatus.PENDING).length,
-    inProgress: assignedTickets.filter(t => t.status === TicketStatus.IN_PROGRESS).length,
-    resolved: assignedTickets.filter(t => t.status === TicketStatus.RESOLVED).length,
+    pending: assignedTickets.filter(t => t.status === 'PENDING').length,
+    inProgress: assignedTickets.filter(t => t.status === 'IN_PROGRESS').length,
+    atSite: assignedTickets.filter(t => t.status === 'AT_SITE').length,
+    waitingForMaterial: assignedTickets.filter(t => t.status === 'WAITING_FOR_MATERIAL').length,
+    resolved: assignedTickets.filter(t => t.status === 'RESOLVED').length,
   };
 
   const handleStatusUpdate = async (ticketId: number, newStatus: TicketStatus) => {
-    // TODO: Implement actual API call
-    setAssignedTickets(prev => 
-      prev.map(ticket => 
-        ticket.id === ticketId 
-          ? { ...ticket, status: newStatus, updatedAt: new Date().toISOString() }
-          : ticket
-      )
-    );
+    try {
+      console.log(`🔄 StaffDashboard: Starting status update for ticket ${ticketId} to ${newStatus}`);
+      
+      await dashboardApi.updateTicketStatus(ticketId, newStatus);
+      console.log(`✅ StaffDashboard: API call successful for ticket ${ticketId}`);
+      
+      // Update local state
+      setAssignedTickets(prev => {
+        const updated = prev.map(ticket => 
+          ticket.id === ticketId 
+            ? { 
+                ...ticket, 
+                status: newStatus, 
+                updatedAt: new Date().toISOString(),
+                ...(newStatus === TicketStatus.RESOLVED && { resolvedAt: new Date().toISOString() })
+              }
+            : ticket
+        );
+        console.log(`📊 StaffDashboard: Updated local state for ticket ${ticketId}`, {
+          oldStatus: prev.find(t => t.id === ticketId)?.status,
+          newStatus: updated.find(t => t.id === ticketId)?.status
+        });
+        return updated;
+      });
+      
+      console.log(`✅ StaffDashboard: Ticket ${ticketId} status updated to ${newStatus}`);
+    } catch (err: any) {
+      console.error('❌ StaffDashboard: Failed to update ticket status:', err);
+      // You could add a toast notification here
+      throw err; // Re-throw so the modal can handle the error
+    }
+  };
+
+  const handleOpenStatusModal = (ticket: Ticket) => {
+    setTicketForStatusUpdate(ticket);
+    setShowStatusModal(true);
+  };
+
+  const handleCloseStatusModal = () => {
+    setShowStatusModal(false);
+    setTicketForStatusUpdate(null);
   };
 
   const getStatusColor = (status: TicketStatus) => {
@@ -116,10 +121,16 @@ const StaffDashboard: React.FC = () => {
         return 'bg-yellow-100 text-yellow-800';
       case TicketStatus.IN_PROGRESS:
         return 'bg-blue-100 text-blue-800';
+      case TicketStatus.AT_SITE:
+        return 'bg-purple-100 text-purple-800';
+      case TicketStatus.WAITING_FOR_MATERIAL:
+        return 'bg-orange-100 text-orange-800';
       case TicketStatus.RESOLVED:
         return 'bg-green-100 text-green-800';
       case TicketStatus.CLOSED:
         return 'bg-gray-100 text-gray-800';
+      case TicketStatus.REJECTED:
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -131,8 +142,16 @@ const StaffDashboard: React.FC = () => {
         return <ClockIcon className="h-4 w-4" />;
       case TicketStatus.IN_PROGRESS:
         return <ExclamationTriangleIcon className="h-4 w-4" />;
+      case TicketStatus.AT_SITE:
+        return <MapPinIcon className="h-4 w-4" />;
+      case TicketStatus.WAITING_FOR_MATERIAL:
+        return <TruckIcon className="h-4 w-4" />;
       case TicketStatus.RESOLVED:
         return <CheckCircleIcon className="h-4 w-4" />;
+      case TicketStatus.CLOSED:
+        return <CheckCircleIcon className="h-4 w-4" />;
+      case TicketStatus.REJECTED:
+        return <ExclamationTriangleIcon className="h-4 w-4" />;
       default:
         return <ClockIcon className="h-4 w-4" />;
     }
@@ -183,6 +202,11 @@ const StaffDashboard: React.FC = () => {
     );
   }
 
+  // Debug information - temporary
+  console.log('🔍 StaffDashboard Render - assignedTickets:', assignedTickets);
+  console.log('🔍 StaffDashboard Render - assignedTickets.length:', assignedTickets.length);
+  console.log('🔍 StaffDashboard Render - loading:', loading);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -195,6 +219,10 @@ const StaffDashboard: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 font-poppins">Staff Dashboard</h1>
             <p className="text-gray-600 mt-2">Manage assigned tickets and updates</p>
+            {/* Debug info - temporary */}
+            <div className="mt-2 p-2 bg-yellow-100 rounded text-xs">
+              <strong>Debug:</strong> Tickets: {assignedTickets.length} | Loading: {loading ? 'Yes' : 'No'} | User: {user?.name} ({user?.role})
+            </div>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">Welcome back,</p>
@@ -204,20 +232,20 @@ const StaffDashboard: React.FC = () => {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm p-6 card-hover"
+          className="bg-white rounded-xl shadow-sm p-4 card-hover"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Assigned</p>
-              <p className="text-2xl font-bold text-gray-900 font-poppins">{stats.total}</p>
+              <p className="text-xs font-medium text-gray-600">Total</p>
+              <p className="text-lg font-bold text-gray-900 font-poppins">{stats.total}</p>
             </div>
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <ClipboardDocumentListIcon className="h-6 w-6 text-blue-600" />
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <ClipboardDocumentListIcon className="h-4 w-4 text-blue-600" />
             </div>
           </div>
         </motion.div>
@@ -226,15 +254,15 @@ const StaffDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm p-6 card-hover"
+          className="bg-white rounded-xl shadow-sm p-4 card-hover"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-yellow-600 font-poppins">{stats.pending}</p>
+              <p className="text-xs font-medium text-gray-600">Pending</p>
+              <p className="text-lg font-bold text-yellow-600 font-poppins">{stats.pending}</p>
             </div>
-            <div className="p-3 bg-yellow-50 rounded-lg">
-              <ClockIcon className="h-6 w-6 text-yellow-600" />
+            <div className="p-2 bg-yellow-50 rounded-lg">
+              <ClockIcon className="h-4 w-4 text-yellow-600" />
             </div>
           </div>
         </motion.div>
@@ -243,15 +271,15 @@ const StaffDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl shadow-sm p-6 card-hover"
+          className="bg-white rounded-xl shadow-sm p-4 card-hover"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">In Progress</p>
-              <p className="text-2xl font-bold text-blue-600 font-poppins">{stats.inProgress}</p>
+              <p className="text-xs font-medium text-gray-600">In Progress</p>
+              <p className="text-lg font-bold text-blue-600 font-poppins">{stats.inProgress}</p>
             </div>
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <ExclamationTriangleIcon className="h-6 w-6 text-blue-600" />
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <ExclamationTriangleIcon className="h-4 w-4 text-blue-600" />
             </div>
           </div>
         </motion.div>
@@ -260,15 +288,49 @@ const StaffDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl shadow-sm p-6 card-hover"
+          className="bg-white rounded-xl shadow-sm p-4 card-hover"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Resolved</p>
-              <p className="text-2xl font-bold text-green-600 font-poppins">{stats.resolved}</p>
+              <p className="text-xs font-medium text-gray-600">At Site</p>
+              <p className="text-lg font-bold text-purple-600 font-poppins">{stats.atSite}</p>
             </div>
-            <div className="p-3 bg-green-50 rounded-lg">
-              <CheckCircleIcon className="h-6 w-6 text-green-600" />
+            <div className="p-2 bg-purple-50 rounded-lg">
+              <MapPinIcon className="h-4 w-4 text-purple-600" />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white rounded-xl shadow-sm p-4 card-hover"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-gray-600">Waiting</p>
+              <p className="text-lg font-bold text-orange-600 font-poppins">{stats.waitingForMaterial}</p>
+            </div>
+            <div className="p-2 bg-orange-50 rounded-lg">
+              <TruckIcon className="h-4 w-4 text-orange-600" />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-white rounded-xl shadow-sm p-4 card-hover"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-gray-600">Resolved</p>
+              <p className="text-lg font-bold text-green-600 font-poppins">{stats.resolved}</p>
+            </div>
+            <div className="p-2 bg-green-50 rounded-lg">
+              <CheckCircleIcon className="h-4 w-4 text-green-600" />
             </div>
           </div>
         </motion.div>
@@ -283,7 +345,7 @@ const StaffDashboard: React.FC = () => {
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-semibold text-gray-900 font-poppins">Assigned Tickets</h2>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setFilterStatus('ALL')}
               className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
@@ -315,6 +377,26 @@ const StaffDashboard: React.FC = () => {
               In Progress ({stats.inProgress})
             </button>
             <button
+              onClick={() => setFilterStatus(TicketStatus.AT_SITE)}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                filterStatus === TicketStatus.AT_SITE
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              At Site ({stats.atSite})
+            </button>
+            <button
+              onClick={() => setFilterStatus(TicketStatus.WAITING_FOR_MATERIAL)}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                filterStatus === TicketStatus.WAITING_FOR_MATERIAL
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Waiting ({stats.waitingForMaterial})
+            </button>
+            <button
               onClick={() => setFilterStatus(TicketStatus.RESOLVED)}
               className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                 filterStatus === TicketStatus.RESOLVED
@@ -331,11 +413,22 @@ const StaffDashboard: React.FC = () => {
           {filteredTickets.length === 0 ? (
             <div className="text-center py-12">
               <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-gray-500">No tickets found for the selected filter.</p>
+              <p className="text-gray-500">
+                {assignedTickets.length === 0 
+                  ? "No tickets have been assigned to you yet." 
+                  : "No tickets found for the selected filter."}
+              </p>
+              {assignedTickets.length === 0 && (
+                <p className="text-sm text-gray-400 mt-2">
+                  Contact your administrator to assign tickets to you.
+                </p>
+              )}
             </div>
           ) : (
-            filteredTickets.map((ticket, index) => (
-              <motion.div
+            filteredTickets.map((ticket, index) => {
+              console.log(`🎫 StaffDashboard: Rendering ticket ${ticket.id} (${ticket.ticketId}) with status: ${ticket.status}`);
+              return (
+                <motion.div
                 key={ticket.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -346,8 +439,8 @@ const StaffDashboard: React.FC = () => {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-3">
                       <h3 className="text-lg font-semibold text-gray-900">{ticket.ticketId}</h3>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                        {getStatusIcon(ticket.status)}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(ticket.status as TicketStatus)}`}>
+                        {getStatusIcon(ticket.status as TicketStatus)}
                         <span className="ml-1">{ticket.status.replace('_', ' ')}</span>
                       </span>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
@@ -398,33 +491,28 @@ const StaffDashboard: React.FC = () => {
                           <span>View Photo</span>
                         </button>
                         
-                        {ticket.status === TicketStatus.PENDING && (
-                          <button
-                            onClick={() => handleStatusUpdate(ticket.id, TicketStatus.IN_PROGRESS)}
-                            className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Start Work
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleOpenStatusModal(ticket)}
+                          className="flex items-center space-x-1 px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                        >
+                          <PencilSquareIcon className="h-4 w-4" />
+                          <span>Update Status</span>
+                        </button>
                         
-                        {ticket.status === TicketStatus.IN_PROGRESS && (
-                          <button
-                            onClick={() => handleStatusUpdate(ticket.id, TicketStatus.RESOLVED)}
-                            className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                          >
-                            Mark Resolved
-                          </button>
-                        )}
-                        
-                        <button className="px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-                          View Details
+                        <button 
+                          onClick={() => navigate(`/tickets/${ticket.ticketId}`, { state: { fromStaff: true } })}
+                          className="flex items-center space-x-1 px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                          <span>View Details</span>
                         </button>
                       </div>
                     </div>
                   </div>
                 </div>
               </motion.div>
-            ))
+              );
+            })
           )}
         </div>
       </motion.div>
@@ -468,6 +556,18 @@ const StaffDashboard: React.FC = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Status Update Modal */}
+      {showStatusModal && ticketForStatusUpdate && (
+        <StatusUpdateModal
+          isOpen={showStatusModal}
+          onClose={handleCloseStatusModal}
+          ticketId={ticketForStatusUpdate.id}
+          currentStatus={ticketForStatusUpdate.status as TicketStatus}
+          onStatusUpdate={handleStatusUpdate}
+        />
+      )}
+
     </div>
   );
 };

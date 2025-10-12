@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Ticket, TicketStatus, TicketCategory } from '../../types';
+import { Ticket, TicketStatus } from '../../types';
+import { dashboardApi } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   EyeIcon, 
   ClockIcon, 
   CheckCircleIcon, 
   ExclamationTriangleIcon,
   CameraIcon,
-  FunnelIcon
+  FunnelIcon,
+  MapPinIcon
 } from '@heroicons/react/24/outline';
 
 const TicketList: React.FC = () => {
@@ -17,78 +20,50 @@ const TicketList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isAdminView = location.pathname.startsWith('/admin/tickets');
 
-  // Mock data - replace with actual API call
+  // Fetch real tickets from API
   useEffect(() => {
     const fetchTickets = async () => {
-      setLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockTickets: Ticket[] = [
-        {
-          id: 1,
-          ticketId: 'SF2024001',
-          user: { id: 1, name: 'John Doe', email: 'john@example.com', role: 'STUDENT' as any, points: 150 },
-          photoUrl: '/api/placeholder/300/200',
-          roomNumber: '101',
-          floor: '1st',
-          building: 'Main Building',
-          category: TicketCategory.ELECTRICAL,
-          description: 'Light not working in room 101',
-          status: TicketStatus.PENDING,
-          priority: 'MEDIUM' as any,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          ticketId: 'SF2024002',
-          user: { id: 1, name: 'John Doe', email: 'john@example.com', role: 'STUDENT' as any, points: 150 },
-          photoUrl: '/api/placeholder/300/200',
-          roomNumber: '205',
-          floor: '2nd',
-          building: 'Science Block',
-          category: TicketCategory.PLUMBING,
-          description: 'Leaky faucet in laboratory',
-          status: TicketStatus.IN_PROGRESS,
-          priority: 'HIGH' as any,
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 3,
-          ticketId: 'SF2024003',
-          user: { id: 1, name: 'John Doe', email: 'john@example.com', role: 'STUDENT' as any, points: 150 },
-          photoUrl: '/api/placeholder/300/200',
-          roomNumber: '301',
-          floor: '3rd',
-          building: 'Main Building',
-          category: TicketCategory.AC_WATER,
-          description: 'AC not cooling properly',
-          status: TicketStatus.RESOLVED,
-          priority: 'LOW' as any,
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-          updatedAt: new Date(Date.now() - 86400000).toISOString(),
-          resolvedAt: new Date(Date.now() - 86400000).toISOString(),
+      try {
+        setLoading(true);
+        let response;
+        
+        // Use different API based on user role and route
+        if (isAdminView && (user?.role === 'ADMIN' || user?.role === 'DEPARTMENT_HEAD')) {
+          response = await dashboardApi.getAllTickets();
+        } else {
+          response = await dashboardApi.getStudentTickets();
         }
-      ];
-      
-      setTickets(mockTickets);
-      setFilteredTickets(mockTickets);
-      setLoading(false);
+        
+        const ticketsData = (response as any) || [];
+        setTickets(ticketsData);
+        setFilteredTickets(ticketsData);
+      } catch (error) {
+        console.error('Failed to fetch tickets:', error);
+        setTickets([]);
+        setFilteredTickets([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchTickets();
-  }, []);
+  }, [isAdminView, user?.role]);
 
   // Filter tickets based on status and search term
   useEffect(() => {
     let filtered = tickets;
 
     if (filter !== 'ALL') {
-      filtered = filtered.filter(ticket => ticket.status === filter);
+      filtered = filtered.filter(ticket => {
+        // Handle both string and enum status values
+        const ticketStatus = typeof ticket.status === 'string' ? ticket.status : String(ticket.status);
+        return ticketStatus === filter;
+      });
     }
 
     if (searchTerm) {
@@ -102,16 +77,23 @@ const TicketList: React.FC = () => {
     setFilteredTickets(filtered);
   }, [tickets, filter, searchTerm]);
 
-  const getStatusColor = (status: TicketStatus) => {
-    switch (status) {
-      case TicketStatus.PENDING:
+  const getStatusColor = (status: TicketStatus | string) => {
+    const statusStr = typeof status === 'string' ? status : String(status);
+    switch (statusStr) {
+      case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
-      case TicketStatus.IN_PROGRESS:
+      case 'IN_PROGRESS':
         return 'bg-blue-100 text-blue-800';
-      case TicketStatus.RESOLVED:
+      case 'AT_SITE':
+        return 'bg-purple-100 text-purple-800';
+      case 'WAITING_FOR_MATERIAL':
+        return 'bg-orange-100 text-orange-800';
+      case 'RESOLVED':
         return 'bg-green-100 text-green-800';
-      case TicketStatus.CLOSED:
+      case 'CLOSED':
         return 'bg-gray-100 text-gray-800';
+      case 'REJECTED':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -132,14 +114,23 @@ const TicketList: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: TicketStatus) => {
-    switch (status) {
-      case TicketStatus.PENDING:
+  const getStatusIcon = (status: TicketStatus | string) => {
+    const statusStr = typeof status === 'string' ? status : String(status);
+    switch (statusStr) {
+      case 'PENDING':
         return <ClockIcon className="h-4 w-4" />;
-      case TicketStatus.IN_PROGRESS:
+      case 'IN_PROGRESS':
         return <ExclamationTriangleIcon className="h-4 w-4" />;
-      case TicketStatus.RESOLVED:
+      case 'AT_SITE':
+        return <MapPinIcon className="h-4 w-4" />;
+      case 'WAITING_FOR_MATERIAL':
+        return <ExclamationTriangleIcon className="h-4 w-4" />;
+      case 'RESOLVED':
         return <CheckCircleIcon className="h-4 w-4" />;
+      case 'CLOSED':
+        return <CheckCircleIcon className="h-4 w-4" />;
+      case 'REJECTED':
+        return <ExclamationTriangleIcon className="h-4 w-4" />;
       default:
         return <ClockIcon className="h-4 w-4" />;
     }
@@ -149,8 +140,8 @@ const TicketList: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900 font-poppins">My Tickets</h1>
-          <p className="text-gray-600 mt-2">Manage and track your reported issues</p>
+          <h1 className="text-2xl font-bold text-gray-900 font-poppins">{isAdminView ? 'All Tickets' : 'My Tickets'}</h1>
+          <p className="text-gray-600 mt-2">{isAdminView ? 'View and manage all tickets in the system' : 'Manage and track your reported issues'}</p>
         </div>
         
         <div className="bg-white rounded-xl shadow-sm p-6">
@@ -173,15 +164,17 @@ const TicketList: React.FC = () => {
       >
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 font-poppins">My Tickets</h1>
-            <p className="text-gray-600 mt-2">Manage and track your reported issues</p>
+            <h1 className="text-2xl font-bold text-gray-900 font-poppins">{isAdminView ? 'All Tickets' : 'My Tickets'}</h1>
+            <p className="text-gray-600 mt-2">{isAdminView ? 'View and manage all tickets in the system' : 'Manage and track your reported issues'}</p>
           </div>
-          <Link
-            to="/tickets/create"
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
-          >
-            Create New Ticket
-          </Link>
+          {!isAdminView && (
+            <Link
+              to="/tickets/create"
+              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              Create New Ticket
+            </Link>
+          )}
         </div>
       </motion.div>
 
@@ -207,7 +200,7 @@ const TicketList: React.FC = () => {
           </div>
           
           <div className="flex gap-2">
-            {['ALL', 'PENDING', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'].map((status) => (
+            {['ALL', 'PENDING', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED'].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilter(status)}
@@ -299,13 +292,13 @@ const TicketList: React.FC = () => {
                       )}
                     </div>
                     
-                    <Link
-                      to={`/tickets/${ticket.id}`}
+                    <button
+                      onClick={() => navigate(`/tickets/${ticket.ticketId}`, { state: { fromAdmin: isAdminView } })}
                       className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 mt-2 sm:mt-0"
                     >
                       <EyeIcon className="h-4 w-4" />
                       View Details
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </div>

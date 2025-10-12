@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   HomeIcon, 
@@ -8,13 +8,18 @@ import {
   ChartBarIcon, 
   GiftIcon, 
   CogIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  UsersIcon,
+  Bars3Icon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 
 const Sidebar: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const [isOpen, setIsOpen] = useState(false);
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: HomeIcon },
@@ -25,17 +30,48 @@ const Sidebar: React.FC = () => {
 
   const adminNavigation = [
     { name: 'Admin Panel', href: '/admin', icon: CogIcon },
+    { name: 'All Tickets', href: '/admin/tickets', icon: TicketIcon },
+    { name: 'Staff Management', href: '/admin/staff', icon: UsersIcon },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
   ];
 
   const staffNavigation = [
     { name: 'Staff Panel', href: '/staff', icon: UserGroupIcon },
+    { name: 'Assigned Tickets', href: '/assigned-tickets', icon: TicketIcon },
   ];
 
   const isActive = (href: string) => {
     if (href === '/') {
       return location.pathname === '/';
     }
+    
+    // Special handling for ticket details page
+    if (location.pathname.startsWith('/tickets/')) {
+      // Check URL parameter for navigation source
+      const fromParam = searchParams.get('from');
+      
+      // Check if we came from assigned tickets page (via URL param or state) - highest priority
+      const fromAssignedTickets = location.state?.fromAssignedTickets || fromParam === 'assigned-tickets';
+      if (fromAssignedTickets) {
+        return href === '/assigned-tickets';
+      }
+      
+      // Check if we came from staff dashboard
+      const fromStaff = location.state?.fromStaff;
+      if (fromStaff) {
+        return href === '/staff';
+      }
+      
+      // Check if we came from admin (either dashboard or tickets page)
+      const fromAdmin = location.state?.fromAdmin;
+      if (fromAdmin) {
+        return href === '/admin/tickets';
+      }
+      
+      // Default to My Tickets if no specific source
+      return href === '/tickets';
+    }
+    
     return location.pathname.startsWith(href);
   };
 
@@ -54,18 +90,42 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="w-64 bg-white shadow-lg h-screen fixed left-0 top-0 z-40">
-      {/* Logo */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="h-8 w-8 bg-primary-500 rounded-lg flex items-center justify-center">
-            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+    <>
+      {/* Mobile menu button */}
+      <button
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-lg"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {isOpen ? (
+          <XMarkIcon className="h-6 w-6 text-gray-600" />
+        ) : (
+          <Bars3Icon className="h-6 w-6 text-gray-600" />
+        )}
+      </button>
+
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`w-64 bg-white shadow-lg h-screen fixed left-0 top-0 z-40 transform transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
+        {/* Logo */}
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="h-8 w-8 bg-primary-500 rounded-lg flex items-center justify-center">
+              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h1 className="text-xl font-bold text-gray-900 font-poppins">SnapFix</h1>
           </div>
-          <h1 className="text-xl font-bold text-gray-900 font-poppins">SnapFix</h1>
         </div>
-      </div>
 
       {/* Navigation */}
       <nav className="mt-6 px-3">
@@ -112,6 +172,7 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

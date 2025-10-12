@@ -47,8 +47,11 @@ export enum TicketCategory {
 export enum TicketStatus {
   PENDING = 'PENDING',
   IN_PROGRESS = 'IN_PROGRESS',
+  AT_SITE = 'AT_SITE',
+  WAITING_FOR_MATERIAL = 'WAITING_FOR_MATERIAL',
   RESOLVED = 'RESOLVED',
-  CLOSED = 'CLOSED'
+  CLOSED = 'CLOSED',
+  REJECTED = 'REJECTED'
 }
 
 export enum TicketPriority {

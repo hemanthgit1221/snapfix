@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -65,6 +67,15 @@ public class Ticket {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @PrePersist
+    protected void generateTicketId() {
+        if (this.ticketId == null) {
+            String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy"));
+            String timestamp = String.valueOf(System.currentTimeMillis()).substring(7); // Last 6 digits
+            this.ticketId = "SF" + year + timestamp;
+        }
+    }
     
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;

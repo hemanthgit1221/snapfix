@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { 
@@ -7,17 +8,54 @@ import {
   ClockIcon, 
   GiftIcon 
 } from '@heroicons/react/24/outline';
+import { dashboardApi, StudentStats, Ticket } from '../../services/api';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<StudentStats>({
+    totalTickets: 0,
+    pendingTickets: 0,
+    inProgressTickets: 0,
+    resolvedTickets: 0,
+    rewardPoints: 0
+  });
+  const [recentTickets, setRecentTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock data - replace with actual API calls
-  const stats = {
-    totalTickets: 12,
-    pendingTickets: 3,
-    resolvedTickets: 9,
-    rewardPoints: user?.points || 0
-  };
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        // Fetch stats and tickets in parallel
+        const [statsResponse, ticketsResponse] = await Promise.all([
+          dashboardApi.getStudentStats(),
+          dashboardApi.getStudentTickets()
+        ]);
+        
+        setStats((statsResponse as any) || {
+          totalTickets: 0,
+          pendingTickets: 0,
+          inProgressTickets: 0,
+          resolvedTickets: 0,
+          rewardPoints: 0
+        });
+        setRecentTickets(((ticketsResponse as any) || []).slice(0, 3)); // Show only 3 most recent
+      } catch (err: any) {
+        console.error('Failed to fetch dashboard data:', err);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
 
   const statCards = [
     {
@@ -105,6 +143,7 @@ const Dashboard: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/tickets/create')}
             className="flex items-center space-x-3 p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
           >
             <div className="p-2 bg-primary-500 rounded-lg">
@@ -116,6 +155,7 @@ const Dashboard: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/tickets')}
             className="flex items-center space-x-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
           >
             <div className="p-2 bg-green-500 rounded-lg">
@@ -127,6 +167,7 @@ const Dashboard: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/rewards')}
             className="flex items-center space-x-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
           >
             <div className="p-2 bg-purple-500 rounded-lg">
@@ -147,40 +188,67 @@ const Dashboard: React.FC = () => {
         <h2 className="text-xl font-semibold text-gray-900 font-poppins mb-4">
           Recent Activity
         </h2>
-        <div className="space-y-4">
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <TicketIcon className="h-4 w-4 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">New ticket created</p>
-              <p className="text-xs text-gray-500">Room 101 - Electrical Issue</p>
-            </div>
-            <span className="text-xs text-gray-400">2 hours ago</span>
+        
+        {loading ? (
+          <div className="animate-pulse space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div className="p-2 bg-gray-200 rounded-lg h-8 w-8"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div className="h-3 bg-gray-200 rounded w-16"></div>
+              </div>
+            ))}
           </div>
-          
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircleIcon className="h-4 w-4 text-green-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Ticket resolved</p>
-              <p className="text-xs text-gray-500">Room 205 - Plumbing Issue</p>
-            </div>
-            <span className="text-xs text-gray-400">1 day ago</span>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-red-600">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              Retry
+            </button>
           </div>
-          
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <GiftIcon className="h-4 w-4 text-purple-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Reward earned</p>
-              <p className="text-xs text-gray-500">+50 points for ticket resolution</p>
-            </div>
-            <span className="text-xs text-gray-400">2 days ago</span>
+        ) : recentTickets.length === 0 ? (
+          <div className="text-center py-8">
+            <TicketIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <p className="text-gray-500">No recent tickets found</p>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            {recentTickets.map((ticket, index) => (
+              <div key={ticket.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div className={`p-2 rounded-lg ${
+                  ticket.status === 'RESOLVED' ? 'bg-green-100' : 
+                  ticket.status === 'IN_PROGRESS' ? 'bg-blue-100' : 'bg-yellow-100'
+                }`}>
+                  {ticket.status === 'RESOLVED' ? (
+                    <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                  ) : ticket.status === 'IN_PROGRESS' ? (
+                    <TicketIcon className="h-4 w-4 text-blue-600" />
+                  ) : (
+                    <ClockIcon className="h-4 w-4 text-yellow-600" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    {ticket.status === 'RESOLVED' ? 'Ticket resolved' : 
+                     ticket.status === 'IN_PROGRESS' ? 'Ticket in progress' : 'New ticket created'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {ticket.ticketId} - Room {ticket.roomNumber} • {ticket.category}
+                  </p>
+                </div>
+                <span className="text-xs text-gray-400">
+                  {new Date(ticket.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </motion.div>
     </div>
   );

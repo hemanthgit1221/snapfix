@@ -16,6 +16,10 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
         
+        System.out.println("JwtAuthenticationEntryPoint: Authentication failed for URI: " + request.getRequestURI());
+        System.out.println("JwtAuthenticationEntryPoint: Auth header: " + request.getHeader("Authorization"));
+        System.out.println("JwtAuthenticationEntryPoint: Exception: " + authException.getMessage());
+        
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Invalid or missing token\"}");

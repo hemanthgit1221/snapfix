@@ -1,0 +1,44 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: snapfix-postgres
+    environment:
+      POSTGRES_DB: snapfix
+      POSTGRES_USER: snapfix_user
+      POSTGRES_PASSWORD: snapfix_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - snapfix-network
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: snapfix-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/snapfix
+      SPRING_DATASOURCE_USERNAME: snapfix_user
+      SPRING_DATASOURCE_PASSWORD: snapfix_password
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      JWT_EXPIRATION: 86400000
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - snapfix-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  snapfix-network:
+    driver: bridge

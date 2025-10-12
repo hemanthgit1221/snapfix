@@ -6,18 +6,24 @@ import com.snapfix.entity.Ticket;
 import com.snapfix.entity.TicketComment;
 import com.snapfix.entity.TicketStatus;
 import com.snapfix.entity.User;
+import com.snapfix.entity.UserRole;
 import com.snapfix.repository.TicketRepository;
 import com.snapfix.repository.TicketCommentRepository;
 import com.snapfix.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -40,6 +46,9 @@ public class TicketService {
     @Autowired
     private EmailService emailService;
     
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
     public TicketResponse createTicket(CreateTicketRequest request, User user, MultipartFile photo) {
         Ticket ticket = new Ticket();
         ticket.setUser(user);
@@ -57,6 +66,11 @@ public class TicketService {
             ticket.setPhotoUrl(photoUrl);
         }
         
+        ticket = ticketRepository.save(ticket);
+        
+        // Generate and set ticket ID after saving
+        String ticketId = generateTicketId(ticket.getId());
+        ticket.setTicketId(ticketId);
         ticket = ticketRepository.save(ticket);
         
         // Send notification email
@@ -95,7 +109,14 @@ public class TicketService {
     }
     
     public List<TicketResponse> getAllActiveTickets() {
-        return ticketRepository.findActiveTickets()
+        return ticketRepository.findAllTicketsOrderByCreatedAtDesc()
+                .stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+    
+    public List<TicketResponse> getAllTickets() {
+        return ticketRepository.findAllTicketsOrderByCreatedAtDesc()
                 .stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
@@ -222,5 +243,82 @@ public class TicketService {
             comment.getComment(),
             comment.getCreatedAt()
         );
+    }
+    
+    private String generateTicketId(Long id) {
+        String year = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy"));
+        return String.format("SF%s%06d", year, id);
+    }
+    
+    public Map<String, Object> getTicketStats(User user) {
+        List<Ticket> userTickets = ticketRepository.findByUser(user);
+        
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalTickets", userTickets.size());
+        stats.put("pendingTickets", userTickets.stream().mapToLong(t -> t.getStatus() == TicketStatus.PENDING ? 1 : 0).sum());
+        stats.put("inProgressTickets", userTickets.stream().mapToLong(t -> t.getStatus() == TicketStatus.IN_PROGRESS ? 1 : 0).sum());
+        stats.put("resolvedTickets", userTickets.stream().mapToLong(t -> t.getStatus() == TicketStatus.RESOLVED ? 1 : 0).sum());
+        stats.put("rewardPoints", user.getPoints() != null ? user.getPoints() : 0);
+        
+        return stats;
+    }
+    
+    public Map<String, Object> getAdminStats() {
+        Map<String, Object> stats = new HashMap<>();
+        
+        // Get all tickets for admin stats
+        List<Ticket> allTickets = ticketRepository.findAll();
+        List<Ticket> activeTickets = ticketRepository.findActiveTickets();
+        List<Ticket> unassignedTickets = ticketRepository.findUnassignedTickets();
+        
+        stats.put("totalTickets", allTickets.size());
+        stats.put("pendingTickets", allTickets.stream().mapToLong(t -> t.getStatus() == TicketStatus.PENDING ? 1 : 0).sum());
+        stats.put("inProgressTickets", allTickets.stream().mapToLong(t -> t.getStatus() == TicketStatus.IN_PROGRESS ? 1 : 0).sum());
+        stats.put("resolvedTickets", allTickets.stream().mapToLong(t -> t.getStatus() == TicketStatus.RESOLVED ? 1 : 0).sum());
+        stats.put("activeTickets", activeTickets.size());
+        stats.put("unassignedTickets", unassignedTickets.size());
+        
+        // Get user stats
+        long totalUsers = userRepository.count();
+        long activeStaff = userRepository.findByRole(com.snapfix.entity.UserRole.STAFF).size();
+        
+        stats.put("totalUsers", totalUsers);
+        stats.put("activeStaff", activeStaff);
+        
+        return stats;
+    }
+    
+    public List<User> getStaffUsers() {
+        List<User> staffUsers = userRepository.findStaffUsers();
+        
+        // Calculate assigned ticket count for each staff member
+        for (User user : staffUsers) {
+            long assignedTicketCount = ticketRepository.countByAssignedToAndStatusIn(
+                user, 
+                Arrays.asList(TicketStatus.PENDING, TicketStatus.IN_PROGRESS)
+            );
+            // We'll add a transient field to store this count
+            // For now, we'll use the existing points field as a temporary storage
+            user.setPoints((int) assignedTicketCount);
+        }
+        
+        return staffUsers;
+    }
+    
+    public User createStaffMember(String name, String email, String password, String role) {
+        // Check if user already exists
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("User with email " + email + " already exists");
+        }
+        
+        // Create new user
+        User newUser = new User();
+        newUser.setName(name);
+        newUser.setEmail(email);
+        newUser.setPassword(passwordEncoder.encode(password)); // Encode password
+        newUser.setRole(UserRole.valueOf(role));
+        newUser.setPoints(0);
+        
+        return userRepository.save(newUser);
     }
 }

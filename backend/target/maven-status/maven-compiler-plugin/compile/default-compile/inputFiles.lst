@@ -5,6 +5,8 @@ C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\entity\Ti
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\entity\TicketCategory.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\entity\VoucherStatus.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\entity\Reward.java
+C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\controller\FileController.java
+C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\controller\TestController.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\repository\UserRepository.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\service\EmailService.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\config\SecurityConfig.java
@@ -24,5 +26,6 @@ C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\repositor
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\service\TicketService.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\entity\UserRole.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\dto\CreateTicketRequest.java
+C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\config\WebConfig.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\service\UserService.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\entity\User.java

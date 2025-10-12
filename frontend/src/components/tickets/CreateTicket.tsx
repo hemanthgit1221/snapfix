@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { TicketCategory } from '../../types';
 import { CameraIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { apiClient } from '../../services/api';
 
 const CreateTicket: React.FC = () => {
   const navigate = useNavigate();
@@ -63,15 +64,18 @@ const CreateTicket: React.FC = () => {
         submitData.append('photo', photo);
       }
 
-      // TODO: Replace with actual API call
+      // Call the actual API
       console.log('Submitting ticket:', submitData);
+      console.log('Current token:', localStorage.getItem('token'));
+      const response = await apiClient.upload('/tickets', submitData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Ticket created successfully:', response);
       
+      // Navigate to tickets list
       navigate('/tickets');
     } catch (err: any) {
-      setError(err.message || 'Failed to create ticket');
+      console.error('Failed to create ticket:', err);
+      setError(err.message || 'Failed to create ticket. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

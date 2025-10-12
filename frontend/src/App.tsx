@@ -8,7 +8,10 @@ import TicketList from './components/tickets/TicketList';
 import CreateTicket from './components/tickets/CreateTicket';
 import TicketDetails from './components/tickets/TicketDetails';
 import AdminDashboard from './components/admin/AdminDashboard';
+import AdminTickets from './components/admin/AdminTickets';
+import StaffManagement from './components/admin/StaffManagement';
 import StaffDashboard from './components/staff/StaffDashboard';
+import AssignedTickets from './components/tickets/AssignedTickets';
 import Analytics from './components/analytics/Analytics';
 import Rewards from './components/rewards/Rewards';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -42,13 +45,6 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
-            <Route path="/tickets/:id" element={
-              <ProtectedRoute>
-                <Layout>
-                  <TicketDetails />
-                </Layout>
-              </ProtectedRoute>
-            } />
             <Route path="/admin" element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.DEPARTMENT_HEAD]}>
                 <Layout>
@@ -56,10 +52,38 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/admin/staff" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.DEPARTMENT_HEAD]}>
+                <Layout>
+                  <StaffManagement />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/tickets" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.DEPARTMENT_HEAD]}>
+                <Layout>
+                  <AdminTickets />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/tickets/:ticketId" element={
+              <ProtectedRoute>
+                <Layout>
+                  <TicketDetails />
+                </Layout>
+              </ProtectedRoute>
+            } />
             <Route path="/staff" element={
               <ProtectedRoute allowedRoles={[UserRole.STAFF]}>
                 <Layout>
                   <StaffDashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/assigned-tickets" element={
+              <ProtectedRoute allowedRoles={[UserRole.STAFF]}>
+                <Layout>
+                  <AssignedTickets />
                 </Layout>
               </ProtectedRoute>
             } />

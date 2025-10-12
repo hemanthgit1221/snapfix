@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeftIcon,
@@ -11,69 +11,137 @@ import {
   UserIcon,
   CalendarIcon,
   MapPinIcon,
-  TagIcon
+  TagIcon,
+  PencilSquareIcon
 } from '@heroicons/react/24/outline';
 import { Ticket, TicketComment, TicketStatus } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
+import { dashboardApi } from '../../services/api';
+import StatusUpdateModal from '../staff/StatusUpdateModal';
+import ImageViewerModal from '../common/ImageViewerModal';
 
 const TicketDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { ticketId } = useParams<{ ticketId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const isReviewMode = location.state?.reviewMode || false;
+  const fromAdmin = location.state?.fromAdmin || false;
+  const fromStaff = location.state?.fromStaff || false;
+  const fromAssignedTickets = location.state?.fromAssignedTickets || searchParams.get('from') === 'assigned-tickets';
+  
+  // Determine where to navigate back to based on the source
+  const getBackNavigation = () => {
+    if (fromAdmin) {
+      return '/admin/tickets';
+    }
+    if (fromStaff) {
+      return '/staff';
+    }
+    if (fromAssignedTickets) {
+      return '/assigned-tickets';
+    }
+    return '/tickets';
+  };
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [comments, setComments] = useState<TicketComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState('');
+  const [selectedImageTitle, setSelectedImageTitle] = useState('');
 
   useEffect(() => {
     const fetchTicketDetails = async () => {
-      setLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!ticketId) return;
       
-      // Mock ticket data
-      const mockTicket: Ticket = {
-        id: parseInt(id || '1'),
-        ticketId: 'SF2024001',
-        user: { id: 1, name: 'John Doe', email: 'john@example.com', role: 'STUDENT' as any, points: 150 },
-        photoUrl: '/api/placeholder/400/300',
-        roomNumber: '101',
-        floor: '1st',
-        building: 'Main Building',
-        category: 'ELECTRICAL' as any,
-        description: 'The light in room 101 has been flickering for the past week. It started as a minor issue but has gotten worse. The light now turns on and off randomly, making it difficult to study. Please fix this as soon as possible as it affects my ability to concentrate on my studies.',
-        status: TicketStatus.IN_PROGRESS,
-        priority: 'MEDIUM' as any,
-        assignedTo: { id: 2, name: 'Mike Johnson', email: 'mike@college.edu', role: 'STAFF' as any, points: 0 },
-        createdAt: new Date(Date.now() - 172800000).toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      const mockComments: TicketComment[] = [
-        {
-          id: 1,
-          ticket: mockTicket,
-          user: { id: 2, name: 'Mike Johnson', email: 'mike@college.edu', role: 'STAFF' as any, points: 0 },
-          comment: 'I\'ve inspected the room and found that the light fixture needs to be replaced. I\'ve ordered the necessary parts and will complete the repair by tomorrow.',
-          createdAt: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: 2,
-          ticket: mockTicket,
-          user: { id: 1, name: 'John Doe', email: 'john@example.com', role: 'STUDENT' as any, points: 150 },
-          comment: 'Thank you for the update! I appreciate the quick response.',
-          createdAt: new Date(Date.now() - 43200000).toISOString()
-        }
-      ];
-
-      setTicket(mockTicket);
-      setComments(mockComments);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const response = await dashboardApi.getTicketDetails(ticketId);
+        const ticketData = (response as any);
+        setTicket(ticketData);
+        
+        // TODO: Fetch real comments when comment API is available
+        setComments([]);
+      } catch (error) {
+        console.error('Failed to fetch ticket details:', error);
+        setTicket(null);
+        setComments([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchTicketDetails();
-  }, [id]);
+  }, [ticketId]);
+
+  const handleStatusUpdate = async (ticketId: number, newStatus: TicketStatus) => {
+    if (!ticket) return;
+    
+    try {
+      setUpdatingStatus(true);
+      await dashboardApi.updateTicketStatus(ticketId, newStatus);
+      
+      // Refresh ticket data
+      const response = await dashboardApi.getTicketDetails(ticket.ticketId);
+      const updatedTicket = (response as any);
+      setTicket(updatedTicket);
+      
+      console.log(`Ticket status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Failed to update ticket status:', error);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleApproveTicket = async () => {
+    if (!ticket || !ticketId) return;
+    
+    try {
+      setUpdatingStatus(true);
+      await dashboardApi.updateTicketStatus(ticket.id, TicketStatus.IN_PROGRESS);
+      
+      // Refresh ticket data
+      const response = await dashboardApi.getTicketDetails(ticketId);
+      const updatedTicket = (response as any);
+      setTicket(updatedTicket);
+      
+      console.log('Ticket approved successfully');
+      // Navigate back to admin dashboard
+      navigate('/admin');
+    } catch (error) {
+      console.error('Failed to approve ticket:', error);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleRejectTicket = async () => {
+    if (!ticket || !ticketId) return;
+    
+    try {
+      setUpdatingStatus(true);
+      await dashboardApi.updateTicketStatus(ticket.id, TicketStatus.REJECTED);
+      
+      // Refresh ticket data
+      const response = await dashboardApi.getTicketDetails(ticketId);
+      const updatedTicket = (response as any);
+      setTicket(updatedTicket);
+      
+      console.log('Ticket rejected');
+      // Navigate back to admin dashboard
+      navigate('/admin');
+    } catch (error) {
+      console.error('Failed to reject ticket:', error);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
@@ -95,16 +163,28 @@ const TicketDetails: React.FC = () => {
     setSubmittingComment(false);
   };
 
+  const handleImageClick = (imageUrl: string, ticketId: string) => {
+    setSelectedImageUrl(imageUrl);
+    setSelectedImageTitle(`Ticket ${ticketId} - Issue Photo`);
+    setShowImageViewer(true);
+  };
+
   const getStatusColor = (status: TicketStatus) => {
     switch (status) {
       case TicketStatus.PENDING:
         return 'bg-yellow-100 text-yellow-800';
       case TicketStatus.IN_PROGRESS:
         return 'bg-blue-100 text-blue-800';
+      case TicketStatus.AT_SITE:
+        return 'bg-purple-100 text-purple-800';
+      case TicketStatus.WAITING_FOR_MATERIAL:
+        return 'bg-orange-100 text-orange-800';
       case TicketStatus.RESOLVED:
         return 'bg-green-100 text-green-800';
       case TicketStatus.CLOSED:
         return 'bg-gray-100 text-gray-800';
+      case TicketStatus.REJECTED:
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -116,8 +196,16 @@ const TicketDetails: React.FC = () => {
         return <ClockIcon className="h-4 w-4" />;
       case TicketStatus.IN_PROGRESS:
         return <ExclamationTriangleIcon className="h-4 w-4" />;
+      case TicketStatus.AT_SITE:
+        return <MapPinIcon className="h-4 w-4" />;
+      case TicketStatus.WAITING_FOR_MATERIAL:
+        return <ExclamationTriangleIcon className="h-4 w-4" />;
       case TicketStatus.RESOLVED:
         return <CheckCircleIcon className="h-4 w-4" />;
+      case TicketStatus.CLOSED:
+        return <CheckCircleIcon className="h-4 w-4" />;
+      case TicketStatus.REJECTED:
+        return <ExclamationTriangleIcon className="h-4 w-4" />;
       default:
         return <ClockIcon className="h-4 w-4" />;
     }
@@ -165,7 +253,7 @@ const TicketDetails: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900 font-poppins">Ticket Not Found</h1>
           <p className="text-gray-600 mt-2">The requested ticket could not be found.</p>
           <button
-            onClick={() => navigate('/tickets')}
+            onClick={() => navigate(getBackNavigation())}
             className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           >
             Back to Tickets
@@ -185,7 +273,7 @@ const TicketDetails: React.FC = () => {
       >
         <div className="flex items-center justify-between mb-4">
           <button
-            onClick={() => navigate('/tickets')}
+            onClick={() => navigate(getBackNavigation())}
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeftIcon className="h-5 w-5" />
@@ -215,6 +303,27 @@ const TicketDetails: React.FC = () => {
         </div>
       </motion.div>
 
+      {/* Review Mode Banner */}
+      {isReviewMode && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-blue-50 border border-blue-200 rounded-xl p-4"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <CheckCircleIcon className="h-5 w-5 text-blue-600" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-blue-900">Review Mode</h3>
+              <p className="text-sm text-blue-700">Please review the ticket details below and decide whether to approve or reject this request.</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
@@ -229,7 +338,8 @@ const TicketDetails: React.FC = () => {
             <img
               src={ticket.photoUrl}
               alt="Issue"
-              className="w-full h-64 object-cover rounded-lg"
+              className="w-full h-64 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => handleImageClick(ticket.photoUrl, ticket.ticketId)}
             />
           </motion.div>
 
@@ -391,16 +501,66 @@ const TicketDetails: React.FC = () => {
           >
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions</h2>
             <div className="space-y-3">
+              {/* Admin/Department Head Actions */}
               {(user?.role === 'ADMIN' || user?.role === 'DEPARTMENT_HEAD') && (
-                <button className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-                  Assign to Staff
-                </button>
+                <>
+                  {/* Review Mode - Approve/Reject */}
+                  {isReviewMode && ticket?.status === 'PENDING' && (
+                    <>
+                      <button 
+                        onClick={handleApproveTicket}
+                        disabled={updatingStatus}
+                        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                      >
+                        {updatingStatus ? 'Processing...' : '✅ Approve Ticket'}
+                      </button>
+                      <button 
+                        onClick={handleRejectTicket}
+                        disabled={updatingStatus}
+                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                      >
+                        {updatingStatus ? 'Processing...' : '❌ Reject Ticket'}
+                      </button>
+                    </>
+                  )}
+                  
+                  {/* Normal Mode - Regular Actions */}
+                  {!isReviewMode && ticket?.status === 'PENDING' && (
+                    <button 
+                      onClick={() => handleStatusUpdate(ticket.id, TicketStatus.IN_PROGRESS)}
+                      disabled={updatingStatus}
+                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                      {updatingStatus ? 'Updating...' : 'Approve & Assign to Staff'}
+                    </button>
+                  )}
+                  
+                  {ticket?.status === 'RESOLVED' && (
+                    <button 
+                      onClick={() => handleStatusUpdate(ticket.id, TicketStatus.CLOSED)}
+                      disabled={updatingStatus}
+                      className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+                    >
+                      {updatingStatus ? 'Updating...' : 'Close Ticket'}
+                    </button>
+                  )}
+                </>
               )}
               
-              {(user?.role === 'STAFF' || user?.role === 'ADMIN' || user?.role === 'DEPARTMENT_HEAD') && (
-                <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                  Mark as Resolved
-                </button>
+              {/* Staff Actions */}
+              {(user?.role === 'STAFF') && (
+                <>
+                  {(ticket?.status === 'IN_PROGRESS' || ticket?.status === 'AT_SITE' || ticket?.status === 'WAITING_FOR_MATERIAL') && (
+                    <button 
+                      onClick={() => setShowStatusModal(true)}
+                      disabled={updatingStatus}
+                      className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                    >
+                      <PencilSquareIcon className="h-4 w-4" />
+                      <span>{updatingStatus ? 'Updating...' : 'Update Status'}</span>
+                    </button>
+                  )}
+                </>
               )}
               
               <button className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
@@ -410,6 +570,26 @@ const TicketDetails: React.FC = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Status Update Modal */}
+      {showStatusModal && ticket && (
+        <StatusUpdateModal
+          isOpen={showStatusModal}
+          onClose={() => setShowStatusModal(false)}
+          ticketId={ticket.id}
+          currentStatus={ticket.status as TicketStatus}
+          onStatusUpdate={handleStatusUpdate}
+        />
+      )}
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        isOpen={showImageViewer}
+        onClose={() => setShowImageViewer(false)}
+        imageUrl={selectedImageUrl}
+        title={selectedImageTitle}
+        alt="Ticket Issue Photo"
+      />
     </div>
   );
 };

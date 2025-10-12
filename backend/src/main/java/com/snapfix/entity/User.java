@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -34,6 +35,10 @@ public class User implements UserDetails {
     @Column(name = "email", unique = true)
     private String email;
     
+    @NotBlank
+    @Column(name = "password")
+    private String password;
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private UserRole role;
@@ -53,9 +58,11 @@ public class User implements UserDetails {
     private LocalDateTime updatedAt;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Ticket> tickets;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Reward> rewards;
     
     // Constructors
@@ -156,9 +163,11 @@ public class User implements UserDetails {
     
     @Override
     public String getPassword() {
-        // For Supabase integration, we don't store passwords locally
-        // Authentication is handled by Supabase
-        return null;
+        return password;
+    }
+    
+    public void setPassword(String password) {
+        this.password = password;
     }
     
     @Override

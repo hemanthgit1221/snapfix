@@ -31,13 +31,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Value("${jwt.secret}")
     private String jwtSecret;
     
+    public JwtAuthenticationFilter() {
+        System.out.println("JWT Filter: Constructor called - Filter instance created");
+    }
+    
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, 
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         
+        System.out.println("JWT Filter: doFilterInternal called for URI: " + request.getRequestURI());
+        
+        // Skip JWT validation for login, test, and uploads endpoints
+        String requestURI = request.getRequestURI();
+        if (requestURI.equals("/api/auth/login") || requestURI.startsWith("/api/test/") || requestURI.startsWith("/uploads/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         String authHeader = request.getHeader("Authorization");
         
+        System.out.println("JWT Filter: Request URI: " + requestURI);
+        System.out.println("JWT Filter: Auth Header: " + (authHeader != null ? "Present" : "Missing"));
+        
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("JWT Filter: No valid auth header, continuing without authentication");
             filterChain.doFilter(request, response);
             return;
         }
@@ -46,18 +63,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         try {
             String email = extractEmailFromToken(token);
+            System.out.println("JWT Filter: Extracted email: " + email);
             
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userService.findByEmail(email).orElse(null);
+                System.out.println("JWT Filter: User found: " + (userDetails != null ? "YES" : "NO"));
                 
                 if (userDetails != null && isTokenValid(token, userDetails)) {
+                    System.out.println("JWT Filter: Token is valid, setting authentication");
                     UsernamePasswordAuthenticationToken authToken = 
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    System.out.println("JWT Filter: Token validation failed");
                 }
             }
         } catch (Exception e) {
+            System.out.println("JWT Filter: Exception during authentication: " + e.getMessage());
+            System.out.println("JWT Filter: Exception type: " + e.getClass().getSimpleName());
+            e.printStackTrace();
             logger.error("Cannot set user authentication: " + e.getMessage());
         }
         
