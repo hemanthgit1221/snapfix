@@ -42,13 +42,19 @@ const Login: React.FC = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="mx-auto h-16 w-16 bg-primary-500 rounded-full flex items-center justify-center mb-4"
+              className="flex flex-col items-center mb-4"
             >
-              <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <img 
+                src="/images/brand-logo.png" 
+                alt="Brand Logo" 
+                className="h-16 w-16 object-contain mb-2"
+              />
+              <img 
+                src="/images/snapfix-logo.png" 
+                alt="SnapFix" 
+                className="h-8 object-contain"
+              />
             </motion.div>
-            <h2 className="text-3xl font-bold text-gray-900 font-poppins">SnapFix</h2>
             <p className="mt-2 text-sm text-gray-600 font-inter">
               College Issue Reporting & Maintenance System
             </p>
@@ -145,9 +151,14 @@ const Login: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-center text-sm text-gray-500"
+          className="text-center text-sm text-gray-500 flex items-center justify-center space-x-2"
         >
-          <p>&copy; 2024 SnapFix. All rights reserved.</p>
+          <img 
+            src="/images/snapfix-logo.png" 
+            alt="SnapFix" 
+            className="h-4 object-contain"
+          />
+          <p>&copy; 2025. All rights reserved.</p>
         </motion.div>
       </motion.div>
     </div>

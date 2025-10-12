@@ -118,12 +118,16 @@ const Sidebar: React.FC = () => {
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 bg-primary-500 rounded-lg flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h1 className="text-xl font-bold text-gray-900 font-poppins">SnapFix</h1>
+            <img 
+              src="/images/brand-logo.png" 
+              alt="Brand Logo" 
+              className="h-10 w-10 object-contain"
+            />
+            <img 
+              src="/images/snapfix-logo.png" 
+              alt="SnapFix" 
+              className="h-8 object-contain"
+            />
           </div>
         </div>
 
