@@ -70,6 +70,9 @@ CREATE INDEX IF NOT EXISTS idx_tickets_category ON tickets(category);
 CREATE INDEX IF NOT EXISTS idx_ticket_comments_ticket_id ON ticket_comments(ticket_id);
 CREATE INDEX IF NOT EXISTS idx_rewards_user_id ON rewards(user_id);
 
+-- Composite index for duplicate check optimization
+CREATE INDEX IF NOT EXISTS idx_tickets_duplicate_check ON tickets(room_number, category, status);
+
 -- Insert default admin user (password: admin123)
 INSERT INTO users (name, email, password, role, points) 
 VALUES ('Admin User', 'admin@snapfix.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ADMIN', 0)

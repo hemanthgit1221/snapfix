@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -9,6 +7,7 @@ services:
       POSTGRES_DB: snapfix
       POSTGRES_USER: snapfix_user
       POSTGRES_PASSWORD: snapfix_password
+      TZ: Asia/Kolkata
     ports:
       - "5432:5432"
     volumes:
@@ -30,6 +29,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: snapfix_password
       JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
       JWT_EXPIRATION: 86400000
+      TZ: Asia/Kolkata
     ports:
       - "8080:8080"
     volumes:
