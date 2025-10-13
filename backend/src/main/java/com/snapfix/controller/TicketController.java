@@ -1,6 +1,7 @@
 package com.snapfix.controller;
 
 import com.snapfix.dto.CreateTicketRequest;
+import com.snapfix.dto.DuplicateCheckResponse;
 import com.snapfix.dto.TicketResponse;
 import com.snapfix.entity.TicketStatus;
 import com.snapfix.entity.TicketPriority;
@@ -30,6 +31,15 @@ public class TicketController {
     @Autowired
     private TicketService ticketService;
     
+    @PostMapping("/check-duplicate")
+    public ResponseEntity<DuplicateCheckResponse> checkDuplicate(
+            @RequestBody CreateTicketRequest request,
+            Authentication authentication) {
+        
+        DuplicateCheckResponse response = ticketService.checkForDuplicates(request);
+        return ResponseEntity.ok(response);
+    }
+    
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<TicketResponse> createTicket(
             @RequestParam String roomNumber,
@@ -39,6 +49,8 @@ public class TicketController {
             @RequestParam String description,
             @RequestParam(required = false) TicketPriority priority,
             @RequestParam(value = "photo", required = false) MultipartFile photo,
+            @RequestParam(value = "forceCreate", defaultValue = "false") boolean forceCreate,
+            @RequestParam(value = "parentTicketId", required = false) String parentTicketId,
             Authentication authentication) {
         
         // Create CreateTicketRequest from form parameters
@@ -51,8 +63,15 @@ public class TicketController {
         request.setPriority(priority != null ? priority : TicketPriority.MEDIUM);
         
         User currentUser = (User) authentication.getPrincipal();
-        TicketResponse response = ticketService.createTicket(request, currentUser, photo);
-        return ResponseEntity.ok(response);
+        
+        // If parentTicketId is provided, create as duplicate
+        if (parentTicketId != null && !parentTicketId.isEmpty()) {
+            TicketResponse response = ticketService.createDuplicateTicket(request, currentUser, photo, parentTicketId);
+            return ResponseEntity.ok(response);
+        } else {
+            TicketResponse response = ticketService.createTicket(request, currentUser, photo, forceCreate);
+            return ResponseEntity.ok(response);
+        }
     }
     
     @GetMapping
@@ -293,6 +312,18 @@ public class TicketController {
             return ResponseEntity.ok(comments);
         } else {
             return ResponseEntity.status(403).build();
+        }
+    }
+    
+    @DeleteMapping("/{id}/withdraw")
+    public ResponseEntity<TicketResponse> withdrawTicket(@PathVariable Long id, Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        
+        try {
+            TicketResponse response = ticketService.withdrawDuplicateTicket(id, currentUser);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 }

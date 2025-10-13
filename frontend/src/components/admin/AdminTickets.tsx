@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Ticket, TicketStatus } from '../../types';
 import { dashboardApi } from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
+// import { useAuth } from '../../contexts/AuthContext'; // Not used in this component
+import { formatRelativeTime, formatDateOnly } from '../../utils/dateUtils';
 import { 
   EyeIcon, 
   ClockIcon, 
   CheckCircleIcon, 
   ExclamationTriangleIcon,
-  CameraIcon,
-  FunnelIcon,
   TicketIcon,
   MagnifyingGlassIcon,
   MapPinIcon
@@ -23,7 +22,7 @@ const AdminTickets: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Not used in this component
   const navigate = useNavigate();
 
   // Fetch all tickets from API
@@ -65,6 +64,13 @@ const AdminTickets: React.FC = () => {
         ticket.user.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
+    // Sort by createdAt in descending order (most recent first)
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA; // Most recent first
+    });
 
     setFilteredTickets(filtered);
   }, [tickets, filter, searchTerm]);
@@ -274,6 +280,11 @@ const AdminTickets: React.FC = () => {
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
                         {ticket.priority}
                       </span>
+                      {ticket.isDuplicate && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                          ⚠️ Possible Duplicate
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">
@@ -289,9 +300,18 @@ const AdminTickets: React.FC = () => {
                       {ticket.assignedTo && (
                         <span>Assigned to: {ticket.assignedTo.name}</span>
                       )}
-                      <span>Created: {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                      {ticket.isDuplicate && ticket.parentTicketId && (
+                        <span className="text-orange-600 font-medium">
+                          Duplicate of: {ticket.parentTicketId}
+                        </span>
+                      )}
+                      <span title={formatDateOnly(ticket.createdAt)}>
+                        Created: {formatRelativeTime(ticket.createdAt)}
+                      </span>
                       {ticket.resolvedAt && (
-                        <span>Resolved: {new Date(ticket.resolvedAt).toLocaleDateString()}</span>
+                        <span title={formatDateOnly(ticket.resolvedAt)}>
+                          Resolved: {formatRelativeTime(ticket.resolvedAt)}
+                        </span>
                       )}
                     </div>
                   </div>

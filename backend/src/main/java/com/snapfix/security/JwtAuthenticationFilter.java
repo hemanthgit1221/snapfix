@@ -43,11 +43,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         // Skip JWT validation for login, test, uploads, and fix-passwords endpoints
         String requestURI = request.getRequestURI();
+        System.out.println("JWT Filter: Checking URI: " + requestURI);
         if (requestURI.equals("/api/auth/login") || requestURI.equals("/api/auth/fix-passwords") || 
-            requestURI.startsWith("/api/test/") || requestURI.startsWith("/uploads/")) {
+            requestURI.startsWith("/api/test/") || requestURI.startsWith("/api/test-files/") ||
+            requestURI.startsWith("/api/uploads/") || requestURI.startsWith("/uploads/") ||
+            requestURI.equals("/actuator/health")) {
+            System.out.println("JWT Filter: Skipping JWT validation for: " + requestURI);
             filterChain.doFilter(request, response);
             return;
         }
+        System.out.println("JWT Filter: JWT validation required for: " + requestURI);
         
         String authHeader = request.getHeader("Authorization");
         

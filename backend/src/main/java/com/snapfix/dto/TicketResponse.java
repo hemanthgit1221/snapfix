@@ -26,6 +26,11 @@ public class TicketResponse {
     private LocalDateTime resolvedAt;
     private List<CommentResponse> comments;
     
+    // Duplicate ticket information
+    private Boolean isDuplicate;
+    private String parentTicketId;
+    private List<TicketResponse> duplicateTickets;
+    
     // Constructors
     public TicketResponse() {}
     
@@ -156,5 +161,29 @@ public class TicketResponse {
     
     public void setComments(List<CommentResponse> comments) {
         this.comments = comments;
+    }
+    
+    public Boolean getIsDuplicate() {
+        return isDuplicate;
+    }
+    
+    public void setIsDuplicate(Boolean isDuplicate) {
+        this.isDuplicate = isDuplicate;
+    }
+    
+    public String getParentTicketId() {
+        return parentTicketId;
+    }
+    
+    public void setParentTicketId(String parentTicketId) {
+        this.parentTicketId = parentTicketId;
+    }
+    
+    public List<TicketResponse> getDuplicateTickets() {
+        return duplicateTickets;
+    }
+    
+    public void setDuplicateTickets(List<TicketResponse> duplicateTickets) {
+        this.duplicateTickets = duplicateTickets;
     }
 }

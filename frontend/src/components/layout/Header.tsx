@@ -9,9 +9,13 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
 
   const handleUserClick = () => {
-    // For students, navigate to settings; for others, could show dropdown or do nothing
+    // Navigate to appropriate settings based on user role
     if (user?.role === 'STUDENT') {
       navigate('/settings');
+    } else if (user?.role === 'ADMIN') {
+      navigate('/admin/settings');
+    } else if (user?.role === 'STAFF') {
+      navigate('/staff/settings');
     }
   };
 
@@ -41,10 +45,8 @@ const Header: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleUserClick}
-              className={`flex items-center space-x-1 lg:space-x-2 p-2 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg ${
-                user?.role === 'STUDENT' ? 'cursor-pointer' : 'cursor-default'
-              }`}
-              title={user?.role === 'STUDENT' ? 'Go to Settings' : undefined}
+              className="flex items-center space-x-1 lg:space-x-2 p-2 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg cursor-pointer"
+              title="Go to Settings"
             >
               <UserCircleIcon className="h-5 w-5 lg:h-6 lg:w-6" />
               <span className="text-xs lg:text-sm font-medium hidden sm:block">{user?.role}</span>

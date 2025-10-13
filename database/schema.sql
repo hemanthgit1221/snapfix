@@ -73,6 +73,9 @@ CREATE INDEX idx_tickets_created_at ON tickets(created_at);
 CREATE INDEX idx_ticket_comments_ticket_id ON ticket_comments(ticket_id);
 CREATE INDEX idx_rewards_user_id ON rewards(user_id);
 
+-- Composite index for duplicate check optimization
+CREATE INDEX idx_tickets_duplicate_check ON tickets(room_number, category, status);
+
 -- Create function to generate ticket ID
 CREATE OR REPLACE FUNCTION generate_ticket_id() RETURNS TRIGGER AS $$
 BEGIN

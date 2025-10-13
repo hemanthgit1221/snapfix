@@ -8,9 +8,12 @@ C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\entity\Vo
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\entity\Reward.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\controller\FileController.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\controller\TestController.java
+C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\config\SimpleSecurityConfig.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\repository\UserRepository.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\service\EmailService.java
+C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\dto\DuplicateCheckResponse.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\config\SecurityConfig.java
+C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\controller\TestFileController.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\repository\RewardRepository.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\entity\TicketPriority.java
 C:\Users\raomo\Desktop\SnapFix_mark2\backend\src\main\java\com\snapfix\dto\CommentResponse.java

@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @RestController
-@RequestMapping("/uploads")
+@RequestMapping({"/uploads", "/api/uploads"})
 @CrossOrigin(origins = "*")
 public class FileController {
 
@@ -23,9 +23,13 @@ public class FileController {
 
     @GetMapping("/{filename}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
+        System.out.println("FileController: Serving file: " + filename);
+        System.out.println("FileController: Upload directory: " + uploadDir);
         try {
             Path filePath = Paths.get(uploadDir).resolve(filename);
+            System.out.println("FileController: File path: " + filePath);
             File file = filePath.toFile();
+            System.out.println("FileController: File exists: " + file.exists());
             
             if (!file.exists()) {
                 return ResponseEntity.notFound().build();

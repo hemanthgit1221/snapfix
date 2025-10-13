@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { dashboardApi, Ticket } from '../../services/api';
+import { formatRelativeTime, formatDateOnly } from '../../utils/dateUtils';
 import { 
   ClipboardDocumentListIcon,
   ClockIcon,
@@ -37,11 +38,6 @@ const StaffDashboard: React.FC = () => {
         setLoading(true);
         
         const response = await dashboardApi.getAssignedTickets();
-        console.log('🔍 StaffDashboard: Raw API response:', response);
-        console.log('🔍 StaffDashboard: Response type:', typeof response);
-        console.log('🔍 StaffDashboard: Response length:', (response as any)?.length || 'undefined');
-        console.log('🔍 StaffDashboard: Current user:', user);
-        console.log('🔍 StaffDashboard: User role:', user?.role);
         
         setAssignedTickets(response as any);
       } catch (err: any) {
@@ -58,9 +54,14 @@ const StaffDashboard: React.FC = () => {
     }
   }, [user]);
 
-  const filteredTickets = filterStatus === 'ALL' 
+  const filteredTickets = (filterStatus === 'ALL' 
     ? assignedTickets 
-    : assignedTickets.filter(ticket => ticket.status === filterStatus);
+    : assignedTickets.filter(ticket => ticket.status === filterStatus)
+  ).sort((a, b) => {
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+    return dateB - dateA; // Most recent first
+  });
 
   const stats = {
     total: assignedTickets.length,
@@ -73,10 +74,7 @@ const StaffDashboard: React.FC = () => {
 
   const handleStatusUpdate = async (ticketId: number, newStatus: TicketStatus) => {
     try {
-      console.log(`🔄 StaffDashboard: Starting status update for ticket ${ticketId} to ${newStatus}`);
-      
       await dashboardApi.updateTicketStatus(ticketId, newStatus);
-      console.log(`✅ StaffDashboard: API call successful for ticket ${ticketId}`);
       
       // Update local state
       setAssignedTickets(prev => {
@@ -90,14 +88,9 @@ const StaffDashboard: React.FC = () => {
               }
             : ticket
         );
-        console.log(`📊 StaffDashboard: Updated local state for ticket ${ticketId}`, {
-          oldStatus: prev.find(t => t.id === ticketId)?.status,
-          newStatus: updated.find(t => t.id === ticketId)?.status
-        });
         return updated;
       });
       
-      console.log(`✅ StaffDashboard: Ticket ${ticketId} status updated to ${newStatus}`);
     } catch (err: any) {
       console.error('❌ StaffDashboard: Failed to update ticket status:', err);
       // You could add a toast notification here
@@ -202,10 +195,6 @@ const StaffDashboard: React.FC = () => {
     );
   }
 
-  // Debug information - temporary
-  console.log('🔍 StaffDashboard Render - assignedTickets:', assignedTickets);
-  console.log('🔍 StaffDashboard Render - assignedTickets.length:', assignedTickets.length);
-  console.log('🔍 StaffDashboard Render - loading:', loading);
 
   return (
     <div className="space-y-6">
@@ -219,14 +208,6 @@ const StaffDashboard: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 font-poppins">Staff Dashboard</h1>
             <p className="text-gray-600 mt-2">Manage assigned tickets and updates</p>
-            {/* Debug info - temporary */}
-            <div className="mt-2 p-2 bg-yellow-100 rounded text-xs">
-              <strong>Debug:</strong> Tickets: {assignedTickets.length} | Loading: {loading ? 'Yes' : 'No'} | User: {user?.name} ({user?.role})
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-600">Welcome back,</p>
-            <p className="font-semibold text-gray-900">{user?.name}</p>
           </div>
         </div>
       </motion.div>
@@ -426,7 +407,6 @@ const StaffDashboard: React.FC = () => {
             </div>
           ) : (
             filteredTickets.map((ticket, index) => {
-              console.log(`🎫 StaffDashboard: Rendering ticket ${ticket.id} (${ticket.ticketId}) with status: ${ticket.status}`);
               return (
                 <motion.div
                 key={ticket.id}
@@ -469,12 +449,16 @@ const StaffDashboard: React.FC = () => {
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
                         <div className="flex items-center space-x-1">
                           <CalendarIcon className="h-4 w-4" />
-                          <span>Created {formatTimeAgo(ticket.createdAt)}</span>
+                          <span title={formatDateOnly(ticket.createdAt)}>
+                            Created {formatRelativeTime(ticket.createdAt)}
+                          </span>
                         </div>
                         {ticket.resolvedAt && (
                           <div className="flex items-center space-x-1">
                             <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                            <span>Resolved {formatTimeAgo(ticket.resolvedAt)}</span>
+                            <span title={formatDateOnly(ticket.resolvedAt)}>
+                              Resolved {formatRelativeTime(ticket.resolvedAt)}
+                            </span>
                           </div>
                         )}
                       </div>

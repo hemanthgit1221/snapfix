@@ -17,6 +17,7 @@ import {
 import { Ticket, TicketComment, TicketStatus } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { dashboardApi } from '../../services/api';
+import { formatRelativeTime, formatDateOnly } from '../../utils/dateUtils';
 import StatusUpdateModal from '../staff/StatusUpdateModal';
 import ImageViewerModal from '../common/ImageViewerModal';
 
@@ -30,11 +31,18 @@ const TicketDetails: React.FC = () => {
   const fromAdmin = location.state?.fromAdmin || false;
   const fromStaff = location.state?.fromStaff || false;
   const fromAssignedTickets = location.state?.fromAssignedTickets || searchParams.get('from') === 'assigned-tickets';
+  const returnToReview = location.state?.returnToReview || false;
+  const originalTicketId = location.state?.originalTicketId;
   
   // Determine where to navigate back to based on the source
   const getBackNavigation = () => {
+    if (returnToReview && originalTicketId) {
+      // Return to the review page of the original ticket
+      return `/tickets/${originalTicketId}`;
+    }
     if (fromAdmin) {
-      return '/admin/tickets';
+      // If coming from admin, return to admin dashboard (not admin/tickets)
+      return '/admin';
     }
     if (fromStaff) {
       return '/staff';
@@ -253,10 +261,22 @@ const TicketDetails: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900 font-poppins">Ticket Not Found</h1>
           <p className="text-gray-600 mt-2">The requested ticket could not be found.</p>
           <button
-            onClick={() => navigate(getBackNavigation())}
+            onClick={() => {
+              if (returnToReview && originalTicketId) {
+                // Return to the review page of the original ticket with review mode
+                navigate(`/tickets/${originalTicketId}`, { 
+                  state: { 
+                    reviewMode: true, 
+                    fromAdmin: true 
+                  } 
+                });
+              } else {
+                navigate(getBackNavigation());
+              }
+            }}
             className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           >
-            Back to Tickets
+            {returnToReview ? 'Back to Review' : 'Back to Tickets'}
           </button>
         </div>
       </div>
@@ -273,11 +293,23 @@ const TicketDetails: React.FC = () => {
       >
         <div className="flex items-center justify-between mb-4">
           <button
-            onClick={() => navigate(getBackNavigation())}
+            onClick={() => {
+              if (returnToReview && originalTicketId) {
+                // Return to the review page of the original ticket with review mode
+                navigate(`/tickets/${originalTicketId}`, { 
+                  state: { 
+                    reviewMode: true, 
+                    fromAdmin: true 
+                  } 
+                });
+              } else {
+                navigate(getBackNavigation());
+              }
+            }}
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeftIcon className="h-5 w-5" />
-            <span>Back to Tickets</span>
+            <span>{returnToReview ? 'Back to Review' : 'Back to Tickets'}</span>
           </button>
           
           <div className="flex items-center space-x-3">
@@ -297,8 +329,12 @@ const TicketDetails: React.FC = () => {
             <p className="text-gray-600 mt-1">Created by {ticket.user.name}</p>
           </div>
           <div className="text-right text-sm text-gray-500">
-            <p>Created: {new Date(ticket.createdAt).toLocaleDateString()}</p>
-            <p>Updated: {new Date(ticket.updatedAt).toLocaleDateString()}</p>
+            <p title={formatDateOnly(ticket.createdAt)}>
+              Created: {formatRelativeTime(ticket.createdAt)}
+            </p>
+            <p title={formatDateOnly(ticket.updatedAt)}>
+              Updated: {formatRelativeTime(ticket.updatedAt)}
+            </p>
           </div>
         </div>
       </motion.div>
@@ -319,6 +355,50 @@ const TicketDetails: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-blue-900">Review Mode</h3>
               <p className="text-sm text-blue-700">Please review the ticket details below and decide whether to approve or reject this request.</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Duplicate Information for Review Mode */}
+      {isReviewMode && ticket?.isDuplicate && ticket?.parentTicketId && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-orange-50 border border-orange-200 rounded-xl p-4"
+        >
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <ExclamationTriangleIcon className="h-5 w-5 text-orange-600" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-orange-900 mb-2">⚠️ Possible Duplicate Ticket</h3>
+              <p className="text-sm text-orange-700 mb-3">
+                This ticket appears to be a duplicate of an existing ticket. Please review the parent ticket details below.
+              </p>
+              <div className="bg-white rounded-lg p-3 border border-orange-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Parent Ticket: {ticket.parentTicketId}</p>
+                    <p className="text-xs text-gray-600">This ticket was created as a duplicate of the above ticket</p>
+                  </div>
+                  <button
+                    onClick={() => navigate(`/tickets/${ticket.parentTicketId}`, { 
+                      state: { 
+                        fromAdmin: true, 
+                        reviewMode: false,
+                        returnToReview: true,
+                        originalTicketId: ticket.ticketId
+                      } 
+                    })}
+                    className="px-3 py-1 text-xs font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 transition-colors"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -385,7 +465,9 @@ const TicketDetails: React.FC = () => {
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-sm font-medium text-gray-900">{comment.user.name}</p>
                         <p className="text-xs text-gray-500">
-                          {new Date(comment.createdAt).toLocaleDateString()}
+                          <span title={formatDateOnly(comment.createdAt)}>
+                            {formatRelativeTime(comment.createdAt)}
+                          </span>
                         </p>
                       </div>
                       <p className="text-sm text-gray-700">{comment.comment}</p>
@@ -464,7 +546,9 @@ const TicketDetails: React.FC = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-900">Created</p>
                   <p className="text-sm text-gray-600">
-                    {new Date(ticket.createdAt).toLocaleDateString()}
+                    <span title={formatDateOnly(ticket.createdAt)}>
+                      {formatRelativeTime(ticket.createdAt)}
+                    </span>
                   </p>
                 </div>
               </div>

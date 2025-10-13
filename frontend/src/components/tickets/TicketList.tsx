@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Ticket, TicketStatus } from '../../types';
 import { dashboardApi } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { formatRelativeTime, formatDateOnly } from '../../utils/dateUtils';
 import { 
   EyeIcon, 
   ClockIcon, 
@@ -73,6 +74,13 @@ const TicketList: React.FC = () => {
         ticket.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
+    // Sort by createdAt in descending order (most recent first)
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA; // Most recent first
+    });
 
     setFilteredTickets(filtered);
   }, [tickets, filter, searchTerm]);
@@ -286,9 +294,13 @@ const TicketList: React.FC = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500">
                     <div className="flex items-center gap-4">
                       <span>Category: {ticket.category}</span>
-                      <span>Created: {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                      <span title={formatDateOnly(ticket.createdAt)}>
+                        Created: {formatRelativeTime(ticket.createdAt)}
+                      </span>
                       {ticket.resolvedAt && (
-                        <span>Resolved: {new Date(ticket.resolvedAt).toLocaleDateString()}</span>
+                        <span title={formatDateOnly(ticket.resolvedAt)}>
+                          Resolved: {formatRelativeTime(ticket.resolvedAt)}
+                        </span>
                       )}
                     </div>
                     

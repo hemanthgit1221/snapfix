@@ -21,6 +21,8 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        jdbc:
+          time_zone: Asia/Kolkata
         
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
@@ -38,6 +40,11 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+      
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: Asia/Kolkata
 
 # Supabase Configuration
 supabase:
@@ -57,6 +64,19 @@ cors:
   allowed-methods: GET,POST,PUT,DELETE,OPTIONS
   allowed-headers: "*"
   allow-credentials: true
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mail:
+      enabled: false
 
 # Logging
 logging:

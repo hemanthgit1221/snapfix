@@ -9,6 +9,7 @@ import {
   GiftIcon 
 } from '@heroicons/react/24/outline';
 import { dashboardApi, StudentStats, Ticket } from '../../services/api';
+import { formatRelativeTime, formatDateOnly } from '../../utils/dateUtils';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -43,7 +44,14 @@ const Dashboard: React.FC = () => {
           resolvedTickets: 0,
           rewardPoints: 0
         });
-        setRecentTickets(((ticketsResponse as any) || []).slice(0, 3)); // Show only 3 most recent
+        // Sort by createdAt in descending order and take the 3 most recent
+        const allTickets = ((ticketsResponse as any) || []);
+        const sortedTickets = allTickets.sort((a: Ticket, b: Ticket) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // Most recent first
+        });
+        setRecentTickets(sortedTickets.slice(0, 3)); // Show only 3 most recent
       } catch (err: any) {
         console.error('Failed to fetch dashboard data:', err);
         setError('Failed to load dashboard data');
@@ -242,8 +250,8 @@ const Dashboard: React.FC = () => {
                     {ticket.ticketId} - Room {ticket.roomNumber} • {ticket.category}
                   </p>
                 </div>
-                <span className="text-xs text-gray-400">
-                  {new Date(ticket.createdAt).toLocaleDateString()}
+                <span className="text-xs text-gray-400" title={formatDateOnly(ticket.createdAt)}>
+                  {formatRelativeTime(ticket.createdAt)}
                 </span>
               </div>
             ))}

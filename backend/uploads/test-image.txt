@@ -1,0 +1,2 @@
+This is a test file to verify image serving works correctly.
+The file should be accessible at: http://localhost:8080/api/uploads/test-image.txt

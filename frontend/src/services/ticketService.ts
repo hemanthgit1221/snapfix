@@ -1,5 +1,5 @@
 import { apiClient, ApiResponse } from './api';
-import { Ticket, CreateTicketRequest, TicketComment } from '../types';
+import { Ticket, CreateTicketRequest, TicketComment, DuplicateCheckResponse } from '../types';
 
 export interface TicketFilters {
   status?: string;
@@ -63,9 +63,26 @@ export const ticketService = {
     return apiClient.get<Ticket>(`/tickets/ticket/${ticketId}`);
   },
 
+  // Check for duplicate tickets
+  async checkDuplicates(ticketData: CreateTicketRequest): Promise<DuplicateCheckResponse> {
+    const response = await apiClient.post<DuplicateCheckResponse>('/tickets/check-duplicate', ticketData);
+    // The backend returns DuplicateCheckResponse directly, not wrapped in ApiResponse
+    return response as any;
+  },
+
   // Create a new ticket
-  async createTicket(ticketData: CreateTicketRequest): Promise<ApiResponse<Ticket>> {
-    return apiClient.post<Ticket>('/tickets', ticketData);
+  async createTicket(ticketData: CreateTicketRequest, forceCreate: boolean = false, parentTicketId?: string): Promise<ApiResponse<Ticket>> {
+    const formData = new FormData();
+    formData.append('roomNumber', ticketData.roomNumber);
+    if (ticketData.floor) formData.append('floor', ticketData.floor);
+    if (ticketData.building) formData.append('building', ticketData.building);
+    formData.append('category', ticketData.category);
+    formData.append('description', ticketData.description);
+    if (ticketData.photo) formData.append('photo', ticketData.photo);
+    formData.append('forceCreate', forceCreate.toString());
+    if (parentTicketId) formData.append('parentTicketId', parentTicketId);
+
+    return apiClient.post<Ticket>('/tickets', formData);
   },
 
   // Update ticket status

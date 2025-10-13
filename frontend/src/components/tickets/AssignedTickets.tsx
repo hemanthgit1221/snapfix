@@ -37,7 +37,6 @@ const AssignedTickets: React.FC = () => {
         setLoading(true);
         
         const response = await dashboardApi.getAssignedTickets();
-        console.log('🔍 AssignedTickets: Raw API response:', response);
         
         setAssignedTickets(response as any);
       } catch (err: any) {
@@ -211,10 +210,6 @@ const AssignedTickets: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900 font-poppins">Assigned Tickets</h1>
             <p className="text-gray-600 mt-2">Manage your assigned tickets and track progress</p>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-600">Welcome back,</p>
-            <p className="font-semibold text-gray-900">{user?.name}</p>
-          </div>
         </div>
       </motion.div>
 
@@ -226,9 +221,8 @@ const AssignedTickets: React.FC = () => {
         transition={{ delay: 0.5 }}
         className="bg-white rounded-xl shadow-sm p-6"
       >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 font-poppins">Assigned Tickets</h2>
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-6">
+          <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2">
             <button
               onClick={() => setActiveTab('ALL')}
               className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${

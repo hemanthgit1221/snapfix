@@ -34,6 +34,9 @@ export interface Ticket {
   updatedAt: string;
   resolvedAt?: string;
   comments?: TicketComment[];
+  isDuplicate?: boolean;
+  parentTicketId?: string;
+  duplicateTickets?: Ticket[];
 }
 
 export enum TicketCategory {
@@ -87,12 +90,20 @@ export enum VoucherStatus {
 }
 
 export interface CreateTicketRequest {
-  photo: File;
+  photo?: File | null;
   roomNumber: string;
   floor?: string;
   building?: string;
   category: TicketCategory;
   description: string;
+  priority?: TicketPriority;
+}
+
+export interface DuplicateCheckResponse {
+  hasDuplicates: boolean;
+  potentialDuplicates: Ticket[];
+  maxSimilarityScore: number;
+  suggestedParentTicket?: Ticket;
 }
 
 export interface AuthResponse {

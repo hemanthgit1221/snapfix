@@ -62,4 +62,26 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     
     @Query("SELECT t FROM Ticket t ORDER BY t.createdAt DESC")
     List<Ticket> findAllTicketsOrderByCreatedAtDesc();
+    
+    @Query("SELECT t FROM Ticket t WHERE t.roomNumber = :roomNumber " +
+           "AND t.category = :category " +
+           "AND t.status IN ('PENDING', 'IN_PROGRESS', 'AT_SITE', 'WAITING_FOR_MATERIAL') " +
+           "ORDER BY t.createdAt DESC")
+    List<Ticket> findPotentialDuplicates(
+        @Param("roomNumber") String roomNumber, 
+        @Param("category") TicketCategory category
+    );
+    
+    @Query("SELECT t FROM Ticket t WHERE t.building = :building " +
+           "AND t.floor = :floor " +
+           "AND t.roomNumber = :roomNumber " +
+           "AND t.category = :category " +
+           "AND t.status IN ('PENDING', 'IN_PROGRESS', 'AT_SITE', 'WAITING_FOR_MATERIAL') " +
+           "ORDER BY t.createdAt DESC")
+    List<Ticket> findPotentialDuplicatesByLocation(
+        @Param("building") String building,
+        @Param("floor") String floor,
+        @Param("roomNumber") String roomNumber, 
+        @Param("category") TicketCategory category
+    );
 }

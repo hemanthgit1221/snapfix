@@ -43,8 +43,36 @@ const Sidebar: React.FC = () => {
   ];
 
   const isActive = (href: string) => {
+    // Exact match for root
     if (href === '/') {
       return location.pathname === '/';
+    }
+    
+    // Special handling for settings pages - highest priority
+    if (location.pathname === '/settings' || location.pathname === '/admin/settings' || location.pathname === '/staff/settings') {
+      return href === '/settings';
+    }
+    
+    // Special handling for admin routes to prevent conflicts
+    if (location.pathname.startsWith('/admin/')) {
+      if (location.pathname === '/admin') {
+        return href === '/admin';
+      } else if (location.pathname === '/admin/tickets') {
+        return href === '/admin/tickets';
+      } else if (location.pathname === '/admin/staff') {
+        return href === '/admin/staff';
+      }
+      // All other /admin/* routes (like /admin/settings) are handled above
+      return false;
+    }
+    
+    // Special handling for staff routes
+    if (location.pathname.startsWith('/staff/')) {
+      if (location.pathname === '/staff') {
+        return href === '/staff';
+      }
+      // All other /staff/* routes are handled above
+      return false;
     }
     
     // Special handling for ticket details page
@@ -74,7 +102,8 @@ const Sidebar: React.FC = () => {
       return href === '/tickets';
     }
     
-    return location.pathname.startsWith(href);
+    // Exact match for all other routes
+    return location.pathname === href;
   };
 
   const getNavigationItems = () => {

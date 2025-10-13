@@ -68,6 +68,20 @@ public class Ticket {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
+    
+    // Duplicate ticket tracking
+    @Column(name = "is_duplicate")
+    private Boolean isDuplicate = false;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_ticket_id")
+    private Ticket parentTicket;
+    
+    @OneToMany(mappedBy = "parentTicket", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Ticket> duplicateTickets;
+    
     @PrePersist
     protected void generateTicketId() {
         if (this.ticketId == null) {
@@ -76,9 +90,6 @@ public class Ticket {
             this.ticketId = "SF" + year + timestamp;
         }
     }
-    
-    @Column(name = "resolved_at")
-    private LocalDateTime resolvedAt;
     
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<TicketComment> comments;
@@ -212,6 +223,30 @@ public class Ticket {
     
     public void setResolvedAt(LocalDateTime resolvedAt) {
         this.resolvedAt = resolvedAt;
+    }
+    
+    public Boolean getIsDuplicate() {
+        return isDuplicate;
+    }
+    
+    public void setIsDuplicate(Boolean isDuplicate) {
+        this.isDuplicate = isDuplicate;
+    }
+    
+    public Ticket getParentTicket() {
+        return parentTicket;
+    }
+    
+    public void setParentTicket(Ticket parentTicket) {
+        this.parentTicket = parentTicket;
+    }
+    
+    public List<Ticket> getDuplicateTickets() {
+        return duplicateTickets;
+    }
+    
+    public void setDuplicateTickets(List<Ticket> duplicateTickets) {
+        this.duplicateTickets = duplicateTickets;
     }
     
     public List<TicketComment> getComments() {

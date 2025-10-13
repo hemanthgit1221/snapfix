@@ -262,24 +262,24 @@ const AdminDashboard: React.FC = () => {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {statCards.map((stat, index) => (
           <motion.div
             key={stat.name}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-xl shadow-sm p-6 card-hover"
+            className="bg-white rounded-xl shadow-sm p-4 card-hover h-24 flex items-center"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 font-inter">{stat.name}</p>
-                <p className={`text-2xl font-bold ${stat.textColor} font-poppins`}>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex-1">
+                <p className="text-xs font-medium text-gray-600 font-inter mb-1">{stat.name}</p>
+                <p className={`text-xl font-bold ${stat.textColor} font-poppins`}>
                   {stat.value}
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                <stat.icon className={`h-6 w-6 ${stat.textColor}`} />
+              <div className={`p-2 rounded-lg ${stat.bgColor} ml-2`}>
+                <stat.icon className={`h-5 w-5 ${stat.textColor}`} />
               </div>
             </div>
           </motion.div>

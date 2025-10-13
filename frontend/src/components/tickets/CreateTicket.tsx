@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { TicketCategory } from '../../types';
+import { TicketCategory, TicketPriority, DuplicateCheckResponse } from '../../types';
 import { CameraIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { apiClient } from '../../services/api';
+import { ticketService } from '../../services/ticketService';
+import DuplicateWarningModal from './DuplicateWarningModal';
 
 const CreateTicket: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +20,10 @@ const CreateTicket: React.FC = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [duplicateData, setDuplicateData] = useState<DuplicateCheckResponse | null>(null);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+  const [isCreatingDuplicate, setIsCreatingDuplicate] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -45,40 +50,155 @@ const CreateTicket: React.FC = () => {
     setPhotoPreview(null);
   };
 
+  const checkForDuplicates = async () => {
+    if (!formData.roomNumber || !formData.category || !formData.description) {
+      return false;
+    }
+
+    setIsCheckingDuplicates(true);
+    try {
+      const duplicateRequest = {
+        roomNumber: formData.roomNumber,
+        floor: formData.floor,
+        building: formData.building,
+        category: formData.category,
+        description: formData.description,
+        photo: photo || new File([], '')
+      };
+
+      const response = await ticketService.checkDuplicates(duplicateRequest);
+      
+      if (response && response.hasDuplicates) {
+        setDuplicateData(response);
+        setShowDuplicateModal(true);
+        return true; // Duplicates found
+      }
+      return false; // No duplicates
+    } catch (err) {
+      console.error('Error checking duplicates:', err);
+      return false; // Continue with creation if check fails
+    } finally {
+      setIsCheckingDuplicates(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
 
     try {
-      // Create FormData for file upload
-      const submitData = new FormData();
-      submitData.append('roomNumber', formData.roomNumber);
-      submitData.append('floor', formData.floor);
-      submitData.append('building', formData.building);
-      submitData.append('category', formData.category);
-      submitData.append('description', formData.description);
-      submitData.append('priority', formData.priority);
-      
-      if (photo) {
-        submitData.append('photo', photo);
+      // First check for duplicates
+      const hasDuplicates = await checkForDuplicates();
+      if (hasDuplicates) {
+        setIsSubmitting(false);
+        return; // Stop here, modal will handle the rest
       }
 
-      // Call the actual API
-      console.log('Submitting ticket:', submitData);
-      console.log('Current token:', localStorage.getItem('token'));
-      const response = await apiClient.upload('/tickets', submitData);
+      // No duplicates found, proceed with creation
+      await createTicket(false);
+    } catch (err: any) {
+      console.error('Failed to create ticket:', err);
+      setError(err.message || 'Failed to create ticket. Please try again.');
+      setIsSubmitting(false);
+    }
+  };
+
+  const createTicket = async (forceCreate: boolean, parentTicketId?: string) => {
+    try {
+      const ticketData = {
+        roomNumber: formData.roomNumber,
+        floor: formData.floor,
+        building: formData.building,
+        category: formData.category,
+        description: formData.description,
+        photo: photo || new File([], '')
+      };
+
+      const response = await ticketService.createTicket(ticketData, forceCreate, parentTicketId);
       
-      console.log('Ticket created successfully:', response);
-      
-      // Navigate to tickets list
-      navigate('/tickets');
+      // The backend returns TicketResponse directly, not wrapped in success object
+      if (response) {
+        console.log('Ticket created successfully:', response);
+        navigate('/tickets');
+      } else {
+        throw new Error('Failed to create ticket');
+      }
     } catch (err: any) {
       console.error('Failed to create ticket:', err);
       setError(err.message || 'Failed to create ticket. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleProceedAnyway = () => {
+    setShowDuplicateModal(false);
+    // If there's a suggested parent ticket, create as duplicate, otherwise force create
+    const parentTicketId = duplicateData?.suggestedParentTicket?.ticketId;
+    createTicket(true, parentTicketId); // Force create with optional parent ticket
+  };
+
+  const handleWithdraw = () => {
+    setShowDuplicateModal(false);
+    // Reset form and close modal
+    setFormData({
+      roomNumber: '',
+      floor: '',
+      building: '',
+      category: TicketCategory.PLUMBING,
+      description: '',
+      priority: TicketPriority.MEDIUM
+    });
+    setPhoto(null);
+    setPhotoPreview(null);
+    setError('');
+  };
+
+  const handleCreateAsDuplicate = async (parentTicketId: string) => {
+    setIsCreatingDuplicate(true);
+    setShowDuplicateModal(false);
+    
+    try {
+      const ticketData = {
+        roomNumber: formData.roomNumber,
+        floor: formData.floor || '',
+        building: formData.building || '',
+        category: formData.category,
+        description: formData.description,
+        priority: formData.priority as TicketPriority,
+        photo: photo
+      };
+
+      const response = await ticketService.createTicket(ticketData, false, parentTicketId);
+      
+      // The backend returns TicketResponse directly, not wrapped in success object
+      if (response) {
+        // Show success message
+        alert('Complaint created as duplicate successfully!');
+        // Reset form
+        setFormData({
+          roomNumber: '',
+          floor: '',
+          building: '',
+          category: TicketCategory.PLUMBING,
+          description: '',
+          priority: TicketPriority.MEDIUM
+        });
+        setPhoto(null);
+        setPhotoPreview(null);
+        setError('');
+      }
+    } catch (err) {
+      console.error('Error creating duplicate ticket:', err);
+      setError('Failed to create duplicate ticket. Please try again.');
+    } finally {
+      setIsCreatingDuplicate(false);
+    }
+  };
+
+  const handleViewTicket = (ticketId: string) => {
+    navigate(`/tickets/ticket/${ticketId}`);
   };
 
   return (
@@ -275,15 +395,25 @@ const CreateTicket: React.FC = () => {
             </button>
             <motion.button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isCheckingDuplicates || isCreatingDuplicate}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? (
+              {isCheckingDuplicates ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Checking for duplicates...</span>
+                </div>
+              ) : isSubmitting ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   <span>Creating...</span>
+                </div>
+              ) : isCreatingDuplicate ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Creating duplicate...</span>
                 </div>
               ) : (
                 'Create Ticket'
@@ -292,6 +422,19 @@ const CreateTicket: React.FC = () => {
           </div>
         </form>
       </motion.div>
+
+      {/* Duplicate Warning Modal */}
+      {duplicateData && (
+        <DuplicateWarningModal
+          isOpen={showDuplicateModal}
+          onClose={() => setShowDuplicateModal(false)}
+          duplicateData={duplicateData}
+          onProceedAnyway={handleProceedAnyway}
+          onViewTicket={handleViewTicket}
+          onWithdraw={handleWithdraw}
+          onCreateAsDuplicate={handleCreateAsDuplicate}
+        />
+      )}
     </div>
   );
 };

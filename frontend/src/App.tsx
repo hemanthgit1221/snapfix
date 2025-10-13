@@ -15,6 +15,8 @@ import AssignedTickets from './components/tickets/AssignedTickets';
 import Analytics from './components/analytics/Analytics';
 import Rewards from './components/rewards/Rewards';
 import StudentSettings from './components/student/StudentSettings';
+import AdminSettings from './components/admin/AdminSettings';
+import StaffSettings from './components/staff/StaffSettings';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Layout from './components/layout/Layout';
 
@@ -106,6 +108,20 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <StudentSettings />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <Layout>
+                  <AdminSettings />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/settings" element={
+              <ProtectedRoute allowedRoles={[UserRole.STAFF]}>
+                <Layout>
+                  <StaffSettings />
                 </Layout>
               </ProtectedRoute>
             } />
