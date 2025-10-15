@@ -14,6 +14,7 @@ import StaffDashboard from './components/staff/StaffDashboard';
 import AssignedTickets from './components/tickets/AssignedTickets';
 import Analytics from './components/analytics/Analytics';
 import Rewards from './components/rewards/Rewards';
+import RewardDashboard from './components/rewards/RewardDashboard';
 import StudentSettings from './components/student/StudentSettings';
 import AdminSettings from './components/admin/AdminSettings';
 import StaffSettings from './components/staff/StaffSettings';
@@ -98,6 +99,13 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/rewards" element={
+              <ProtectedRoute>
+                <Layout>
+                  <RewardDashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/rewards/vouchers" element={
               <ProtectedRoute>
                 <Layout>
                   <Rewards />

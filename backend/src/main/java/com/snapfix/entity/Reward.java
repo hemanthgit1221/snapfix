@@ -36,6 +36,12 @@ public class Reward {
     @Column(name = "redeemed_at")
     private LocalDateTime redeemedAt;
     
+    @Column(name = "description")
+    private String description;
+    
+    @Column(name = "reason")
+    private String reason;
+    
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -112,6 +118,22 @@ public class Reward {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    public String getReason() {
+        return reason;
+    }
+    
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 }
 

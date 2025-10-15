@@ -247,5 +247,3 @@ Your SnapFix application is now fully operational!
 **Happy issue reporting!** 🎯
 
 ---
-
-*Need help? Check the logs or restart the services using the management commands above.*

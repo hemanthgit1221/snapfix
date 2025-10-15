@@ -88,3 +88,29 @@ INSERT INTO users (name, email, password, role, points)
 VALUES ('Student User', 'student@snapfix.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'STUDENT', 100)
 ON CONFLICT (email) DO NOTHING;
 
+-- Function to ensure all duplicate tickets point to original parent
+CREATE OR REPLACE FUNCTION find_original_parent_ticket_id(ticket_id_param bigint)
+RETURNS bigint AS $$
+DECLARE
+    current_ticket_id bigint := ticket_id_param;
+    parent_id bigint;
+    is_dup boolean;
+BEGIN
+    -- Loop until we find the original parent (not a duplicate)
+    LOOP
+        SELECT parent_ticket_id, is_duplicate 
+        INTO parent_id, is_dup
+        FROM tickets 
+        WHERE id = current_ticket_id;
+        
+        -- If no parent or not a duplicate, this is the original
+        IF parent_id IS NULL OR is_dup = false OR is_dup IS NULL THEN
+            RETURN current_ticket_id;
+        END IF;
+        
+        -- Move to the parent ticket
+        current_ticket_id := parent_id;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+

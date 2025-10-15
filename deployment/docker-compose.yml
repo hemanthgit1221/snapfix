@@ -56,6 +56,27 @@ services:
       - snapfix-network
     restart: unless-stopped
 
+  # Database Dashboard
+  db-dashboard:
+    build:
+      context: ../db-dashboard
+      dockerfile: Dockerfile
+    container_name: snapfix-db-dashboard
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: snapfix
+      DB_USER: snapfix_user
+      DB_PASSWORD: snapfix_password
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    networks:
+      - snapfix-network
+    restart: unless-stopped
+
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
@@ -69,6 +90,7 @@ services:
     depends_on:
       - frontend
       - backend
+      - db-dashboard
     networks:
       - snapfix-network
     restart: unless-stopped

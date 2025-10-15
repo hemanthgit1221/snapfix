@@ -10,12 +10,14 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
+import { rewardService } from '../../services/rewardService';
 
 interface Reward {
   id: number;
+  userId: number;
   points: number;
   description: string;
-  ticketId: string;
+  ticketId?: string;
   status: 'PENDING' | 'REDEEMED' | 'EXPIRED';
   createdAt: string;
   redeemedAt?: string;
@@ -29,6 +31,7 @@ interface Voucher {
   discount: string;
   validUntil: string;
   category: string;
+  isActive: boolean;
 }
 
 const Rewards: React.FC = () => {
@@ -42,78 +45,49 @@ const Rewards: React.FC = () => {
   useEffect(() => {
     const fetchRewardsData = async () => {
       setLoading(true);
-      // Simulate API calls
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        // Fetch rewards and vouchers from API
+        const [rewardsResponse, vouchersResponse] = await Promise.all([
+          rewardService.getUserRewards(),
+          rewardService.getAvailableVouchers()
+        ]);
+        
+        if (rewardsResponse.success) {
+          setRewards(rewardsResponse.data);
+        }
+        
+        if (vouchersResponse.success) {
+          setVouchers(vouchersResponse.data);
+        }
+      } catch (error) {
+        console.error('Error fetching rewards data:', error);
+        // Fallback to mock data if API fails
+        setRewards([
+          {
+            id: 1,
+            userId: user?.id || 1,
+            points: 50,
+            description: 'Ticket SF2024001 resolved',
+            ticketId: 'SF2024001',
+            status: 'PENDING',
+            createdAt: new Date(Date.now() - 86400000).toISOString()
+          }
+        ]);
+        
+        setVouchers([
+          {
+            id: 1,
+            name: 'Cafeteria Voucher',
+            description: '20% off on any meal',
+            pointsRequired: 100,
+            discount: '20%',
+            validUntil: '2024-12-31',
+            category: 'Food',
+            isActive: true
+          }
+        ]);
+      }
       
-      // Mock rewards data
-      setRewards([
-        {
-          id: 1,
-          points: 50,
-          description: 'Ticket SF2024001 resolved',
-          ticketId: 'SF2024001',
-          status: 'PENDING',
-          createdAt: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: 2,
-          points: 75,
-          description: 'Ticket SF2024002 resolved',
-          ticketId: 'SF2024002',
-          status: 'REDEEMED',
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-          redeemedAt: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: 3,
-          points: 100,
-          description: 'Ticket SF2024003 resolved',
-          ticketId: 'SF2024003',
-          status: 'PENDING',
-          createdAt: new Date(Date.now() - 259200000).toISOString()
-        }
-      ]);
-
-      // Mock vouchers data
-      setVouchers([
-        {
-          id: 1,
-          name: 'Cafeteria Voucher',
-          description: '20% off on any meal',
-          pointsRequired: 100,
-          discount: '20%',
-          validUntil: '2024-12-31',
-          category: 'Food'
-        },
-        {
-          id: 2,
-          name: 'Bookstore Discount',
-          description: '15% off on textbooks',
-          pointsRequired: 150,
-          discount: '15%',
-          validUntil: '2024-12-31',
-          category: 'Education'
-        },
-        {
-          id: 3,
-          name: 'Printing Credits',
-          description: '50 free printing pages',
-          pointsRequired: 75,
-          discount: '50 pages',
-          validUntil: '2024-12-31',
-          category: 'Services'
-        },
-        {
-          id: 4,
-          name: 'Gym Access',
-          description: '1 month free gym membership',
-          pointsRequired: 200,
-          discount: '1 month',
-          validUntil: '2024-12-31',
-          category: 'Fitness'
-        }
-      ]);
-
       setLoading(false);
     };
 
@@ -125,10 +99,25 @@ const Rewards: React.FC = () => {
     setShowRedeemModal(true);
   };
 
-  const confirmRedeem = () => {
+  const confirmRedeem = async () => {
     if (selectedVoucher) {
-      // TODO: Implement actual redemption logic
-      console.log('Redeeming voucher:', selectedVoucher);
+      try {
+        const response = await rewardService.redeemVoucher(selectedVoucher.id);
+        if (response.success) {
+          alert('Voucher redeemed successfully! Check your email for the voucher code.');
+          // Refresh the data
+          const rewardsResponse = await rewardService.getUserRewards();
+          if (rewardsResponse.success) {
+            setRewards(rewardsResponse.data);
+          }
+        } else {
+          alert('Failed to redeem voucher: ' + (response.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error redeeming voucher:', error);
+        alert('Failed to redeem voucher. Please try again.');
+      }
+      
       setShowRedeemModal(false);
       setSelectedVoucher(null);
     }

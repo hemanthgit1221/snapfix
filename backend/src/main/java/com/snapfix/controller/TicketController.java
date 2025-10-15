@@ -203,6 +203,23 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
     
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<TicketResponse> approveTicket(
+            @PathVariable Long id,
+            Authentication authentication) {
+        
+        User currentUser = (User) authentication.getPrincipal();
+        
+        // Only admin and department head can approve tickets
+        if (!currentUser.getRole().name().equals("ADMIN") && 
+            !currentUser.getRole().name().equals("DEPARTMENT_HEAD")) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        TicketResponse response = ticketService.approveTicket(id, currentUser);
+        return ResponseEntity.ok(response);
+    }
+    
     @PutMapping("/{id}/assign")
     public ResponseEntity<TicketResponse> assignTicket(
             @PathVariable Long id,

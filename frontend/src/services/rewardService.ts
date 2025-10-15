@@ -129,6 +129,14 @@ export const rewardService = {
     return apiClient.get<any[]>(`/rewards/leaderboard?limit=${limit}`);
   },
 
+  async getMyAchievements(): Promise<ApiResponse<any[]>> {
+    return apiClient.get<any[]>('/rewards/achievements/my');
+  },
+
+  async getUserAchievements(userId: number): Promise<ApiResponse<any[]>> {
+    return apiClient.get<any[]>(`/rewards/achievements/user/${userId}`);
+  },
+
   async getVoucherUsageStats(): Promise<ApiResponse<any>> {
     return apiClient.get<any>('/vouchers/usage-stats');
   },

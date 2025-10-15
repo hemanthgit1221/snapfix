@@ -1,11 +1,13 @@
 package com.snapfix.controller;
 
 import com.snapfix.dto.UserResponse;
+import com.snapfix.dto.RewardStatsResponse;
 import com.snapfix.entity.User;
 import com.snapfix.entity.UserRole;
 import com.snapfix.repository.UserRepository;
 import com.snapfix.service.UserService;
 import com.snapfix.service.JwtService;
+import com.snapfix.service.RewardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,6 +31,9 @@ public class AuthController {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private RewardService rewardService;
     
     @GetMapping("/test")
     public ResponseEntity<String> test() {
@@ -173,7 +178,17 @@ public class AuthController {
         response.setName(user.getName());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
-        response.setPoints(user.getPoints());
+        response.setCreatedAt(user.getCreatedAt());
+        
+        // Get points from the new reward system instead of user table
+        try {
+            RewardStatsResponse rewardStats = rewardService.getRewardStats(user.getId());
+            response.setPoints(rewardStats.getTotalPoints());
+        } catch (Exception e) {
+            // Fallback to user table points if reward service fails
+            response.setPoints(user.getPoints() != null ? user.getPoints() : 0);
+        }
+        
         return response;
     }
     

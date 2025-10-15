@@ -3,6 +3,7 @@ package com.snapfix.service;
 import com.snapfix.dto.CreateTicketRequest;
 import com.snapfix.dto.DuplicateCheckResponse;
 import com.snapfix.dto.TicketResponse;
+import com.snapfix.dto.RewardStatsResponse;
 import com.snapfix.entity.Ticket;
 import com.snapfix.entity.TicketComment;
 import com.snapfix.entity.TicketStatus;
@@ -52,6 +53,9 @@ public class TicketService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     
+    @Autowired
+    private RewardService rewardService;
+    
     public DuplicateCheckResponse checkForDuplicates(CreateTicketRequest request) {
         List<Ticket> potentialDuplicates;
         
@@ -80,7 +84,9 @@ public class TicketService {
         List<TicketWithSimilarity> ticketsWithSimilarity = potentialDuplicates.stream()
             .map(ticket -> {
                 double score = calculateDuplicateScore(request, ticket);
-                return new TicketWithSimilarity(convertToResponse(ticket), score);
+                // Always show the original parent ticket details, not the child ticket
+                Ticket originalTicket = findOriginalParentTicket(ticket);
+                return new TicketWithSimilarity(convertToResponse(originalTicket), score);
             })
             .filter(ticketWithSim -> ticketWithSim.similarity >= 0.6) // Minimum threshold
             .sorted((a, b) -> Double.compare(b.similarity, a.similarity)) // Sort by score desc
@@ -90,11 +96,14 @@ public class TicketService {
             return new DuplicateCheckResponse(false, null, 0.0);
         }
         
-        // Get the most similar ticket (highest score)
+        // Get the most similar ticket (highest score) - this is already the original parent
         TicketResponse mostSimilarTicket = ticketsWithSimilarity.get(0).ticketResponse;
         double maxScore = ticketsWithSimilarity.get(0).similarity;
         
-        return new DuplicateCheckResponse(true, List.of(mostSimilarTicket), maxScore, mostSimilarTicket);
+        // Since we're already showing the original parent ticket, use it as the suggested parent
+        TicketResponse suggestedParent = mostSimilarTicket;
+        
+        return new DuplicateCheckResponse(true, List.of(mostSimilarTicket), maxScore, suggestedParent);
     }
     
     
@@ -314,13 +323,32 @@ public class TicketService {
         ticket.setStatus(TicketStatus.PENDING);
         ticket.setIsDuplicate(true);
         
-        // Find and set the parent ticket
+        // Find and set the parent ticket - always find the original parent, not a duplicate
         Optional<Ticket> parentTicket = ticketRepository.findByTicketId(parentTicketId);
         if (parentTicket.isPresent()) {
-            ticket.setParentTicket(parentTicket.get());
+            Ticket originalParent = findOriginalParentTicket(parentTicket.get());
+            ticket.setParentTicket(originalParent);
         }
         
         return saveTicketAndReturnResponse(ticket, photo);
+    }
+    
+    /**
+     * Recursively find the original parent ticket (the one that is not a duplicate)
+     */
+    private Ticket findOriginalParentTicket(Ticket ticket) {
+        // If this ticket is not a duplicate, it's the original parent
+        if (ticket.getIsDuplicate() == null || !ticket.getIsDuplicate()) {
+            return ticket;
+        }
+        
+        // If this ticket is a duplicate, find its parent and check if that's the original
+        if (ticket.getParentTicket() != null) {
+            return findOriginalParentTicket(ticket.getParentTicket());
+        }
+        
+        // Fallback: return the ticket itself if no parent is found
+        return ticket;
     }
     
     private TicketResponse saveTicketAndReturnResponse(Ticket ticket, MultipartFile photo) {
@@ -413,6 +441,23 @@ public class TicketService {
         
         // Send notification email
         emailService.sendTicketStatusUpdateNotification(ticket, user);
+        
+        return convertToResponse(ticket);
+    }
+    
+    public TicketResponse approveTicket(Long ticketId, User adminUser) {
+        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
+        if (ticketOpt.isEmpty()) {
+            throw new RuntimeException("Ticket not found");
+        }
+        
+        Ticket ticket = ticketOpt.get();
+        ticket.setStatus(TicketStatus.APPROVED);
+        
+        ticket = ticketRepository.save(ticket);
+        
+        // Send approval notification email
+        emailService.sendTicketApprovalNotification(ticket, adminUser);
         
         return convertToResponse(ticket);
     }
@@ -567,7 +612,15 @@ public class TicketService {
         stats.put("pendingTickets", userTickets.stream().mapToLong(t -> t.getStatus() == TicketStatus.PENDING ? 1 : 0).sum());
         stats.put("inProgressTickets", userTickets.stream().mapToLong(t -> t.getStatus() == TicketStatus.IN_PROGRESS ? 1 : 0).sum());
         stats.put("resolvedTickets", userTickets.stream().mapToLong(t -> t.getStatus() == TicketStatus.RESOLVED ? 1 : 0).sum());
-        stats.put("rewardPoints", user.getPoints() != null ? user.getPoints() : 0);
+        
+        // Get reward points from the reward service instead of user table
+        try {
+            RewardStatsResponse rewardStats = rewardService.getRewardStats(user.getId());
+            stats.put("rewardPoints", rewardStats.getTotalPoints());
+        } catch (Exception e) {
+            // Fallback to user table points if reward service fails
+            stats.put("rewardPoints", user.getPoints() != null ? user.getPoints() : 0);
+        }
         
         return stats;
     }
