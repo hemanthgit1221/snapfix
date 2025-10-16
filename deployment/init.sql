@@ -75,17 +75,17 @@ CREATE INDEX IF NOT EXISTS idx_tickets_duplicate_check ON tickets(room_number, c
 
 -- Insert default admin user (password: admin123)
 INSERT INTO users (name, email, password, role, points) 
-VALUES ('Admin User', 'admin@snapfix.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ADMIN', 0)
+VALUES ('Admin User', 'admin@snapfixindia.space', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ADMIN', 0)
 ON CONFLICT (email) DO NOTHING;
 
 -- Insert sample staff user (password: staff123)
 INSERT INTO users (name, email, password, role, points) 
-VALUES ('Staff User', 'staff@snapfix.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'STAFF', 0)
+VALUES ('Staff User', 'staff@snapfixindia.space', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'STAFF', 0)
 ON CONFLICT (email) DO NOTHING;
 
 -- Insert sample student user (password: student123)
 INSERT INTO users (name, email, password, role, points) 
-VALUES ('Student User', 'student@snapfix.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'STUDENT', 100)
+VALUES ('Student User', 'student@snapfixindia.space', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'STUDENT', 100)
 ON CONFLICT (email) DO NOTHING;
 
 -- Function to ensure all duplicate tickets point to original parent

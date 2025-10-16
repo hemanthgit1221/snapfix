@@ -12,7 +12,8 @@ import {
   UsersIcon,
   Bars3Icon,
   XMarkIcon,
-  UserIcon
+  UserIcon,
+  AcademicCapIcon
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 
@@ -34,6 +35,7 @@ const Sidebar: React.FC = () => {
     { name: 'Admin Panel', href: '/admin', icon: UserIcon },
     { name: 'All Tickets', href: '/admin/tickets', icon: TicketIcon },
     { name: 'Staff Management', href: '/admin/staff', icon: UsersIcon },
+    { name: 'Student Management', href: '/admin/students', icon: AcademicCapIcon },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
   ];
 
@@ -61,6 +63,8 @@ const Sidebar: React.FC = () => {
         return href === '/admin/tickets';
       } else if (location.pathname === '/admin/staff') {
         return href === '/admin/staff';
+      } else if (location.pathname === '/admin/students') {
+        return href === '/admin/students';
       }
       // All other /admin/* routes (like /admin/settings) are handled above
       return false;

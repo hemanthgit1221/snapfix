@@ -10,6 +10,7 @@ import TicketDetails from './components/tickets/TicketDetails';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminTickets from './components/admin/AdminTickets';
 import StaffManagement from './components/admin/StaffManagement';
+import StudentManagement from './components/admin/StudentManagement';
 import StaffDashboard from './components/staff/StaffDashboard';
 import AssignedTickets from './components/tickets/AssignedTickets';
 import Analytics from './components/analytics/Analytics';
@@ -60,6 +61,13 @@ function App() {
               <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.DEPARTMENT_HEAD]}>
                 <Layout>
                   <StaffManagement />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/students" element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.DEPARTMENT_HEAD]}>
+                <Layout>
+                  <StudentManagement />
                 </Layout>
               </ProtectedRoute>
             } />

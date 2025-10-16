@@ -477,7 +477,7 @@ const AdminDashboard: React.FC = () => {
         className="bg-white rounded-xl shadow-sm p-6"
       >
         <h2 className="text-lg font-semibold text-gray-900 font-poppins mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <button 
             onClick={() => navigate('/tickets')}
             className="flex items-center space-x-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
@@ -489,13 +489,23 @@ const AdminDashboard: React.FC = () => {
           </button>
           
           <button 
-            onClick={() => navigate('/admin/users')}
+            onClick={() => navigate('/admin/staff')}
             className="flex items-center space-x-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
           >
             <div className="p-2 bg-green-500 rounded-lg">
               <UserGroupIcon className="h-5 w-5 text-white" />
             </div>
-            <span className="font-medium text-gray-900">Manage Users</span>
+            <span className="font-medium text-gray-900">Manage Staff</span>
+          </button>
+          
+          <button 
+            onClick={() => navigate('/admin/students')}
+            className="flex items-center space-x-3 p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+          >
+            <div className="p-2 bg-indigo-500 rounded-lg">
+              <UserGroupIcon className="h-5 w-5 text-white" />
+            </div>
+            <span className="font-medium text-gray-900">Manage Students</span>
           </button>
           
           <button 

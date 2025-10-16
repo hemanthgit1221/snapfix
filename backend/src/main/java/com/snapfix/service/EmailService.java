@@ -10,6 +10,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.mail.internet.MimeMessage;
 import java.util.List;
@@ -17,19 +19,24 @@ import java.util.List;
 @Service
 public class EmailService {
     
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
+    
     @Autowired
     private JavaMailSender mailSender;
     
     @Autowired
     private UserRepository userRepository;
     
-    @Value("${spring.mail.username}")
+    @Value("${SPRING_MAIL_USERNAME:}")
     private String fromEmail;
     
     @Value("${app.name:SnapFix}")
     private String appName;
     
     public void sendTicketCreatedNotification(Ticket ticket) {
+        logger.debug("Starting sendTicketCreatedNotification for ticket ID: {}", ticket.getTicketId());
+        logger.debug("From email: {}, Ticket user email: {}", fromEmail, ticket.getUser().getEmail());
+        
         try {
             // Send notification to ticket creator
             SimpleMailMessage userMessage = new SimpleMailMessage();
@@ -58,20 +65,26 @@ public class EmailService {
             );
             
             userMessage.setText(userBody);
+            logger.debug("Sending user notification email to: {}", ticket.getUser().getEmail());
             mailSender.send(userMessage);
+            logger.info("Successfully sent ticket creation notification to user: {}", ticket.getUser().getEmail());
             
             // Send notification to all admins
             sendTicketCreatedAdminNotification(ticket);
             
         } catch (Exception e) {
             // Log error but don't throw exception to avoid breaking the main flow
+            logger.error("Failed to send email notification for ticket {}: {}", ticket.getTicketId(), e.getMessage(), e);
             System.err.println("Failed to send email notification: " + e.getMessage());
         }
     }
     
     public void sendTicketCreatedAdminNotification(Ticket ticket) {
+        logger.debug("Starting sendTicketCreatedAdminNotification for ticket ID: {}", ticket.getTicketId());
+        
         try {
             List<User> admins = userRepository.findByRole(UserRole.ADMIN);
+            logger.debug("Found {} admin users to notify", admins.size());
             
             for (User admin : admins) {
                 if (admin.getEmail() != null && !admin.getEmail().isEmpty()) {
@@ -111,10 +124,14 @@ public class EmailService {
                     );
                     
                     message.setText(body);
+                    logger.debug("Sending admin notification email to: {}", admin.getEmail());
                     mailSender.send(message);
+                    logger.info("Successfully sent ticket creation notification to admin: {}", admin.getEmail());
                 }
             }
+            logger.info("Completed sending admin notifications for ticket: {}", ticket.getTicketId());
         } catch (Exception e) {
+            logger.error("Failed to send admin notification for ticket {}: {}", ticket.getTicketId(), e.getMessage(), e);
             System.err.println("Failed to send admin notification: " + e.getMessage());
         }
     }

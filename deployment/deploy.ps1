@@ -135,20 +135,20 @@ if (-not $SkipHealthCheck) {
 
 # Display deployment information
 Write-Host ""
-Write-Success "🎉 SnapFix Deployment Complete!"
+Write-Success "SnapFix Deployment Complete!"
 Write-Host ""
-Write-Host "📋 Service URLs:" -ForegroundColor Cyan
+Write-Host "Service URLs:" -ForegroundColor Cyan
 Write-Host "  • Frontend: http://localhost" -ForegroundColor White
 Write-Host "  • Backend API: http://localhost:8080/api" -ForegroundColor White
 Write-Host "  • Direct Frontend: http://localhost:3000" -ForegroundColor White
 Write-Host "  • Health Check: http://localhost/health" -ForegroundColor White
 Write-Host ""
-Write-Host "👤 Default Users:" -ForegroundColor Cyan
-Write-Host "  • Admin: admin@snapfix.com / admin123" -ForegroundColor White
-Write-Host "  • Staff: staff@snapfix.com / staff123" -ForegroundColor White
-Write-Host "  • Student: student@snapfix.com / student123" -ForegroundColor White
+Write-Host "Default Users:" -ForegroundColor Cyan
+Write-Host "  • Admin: admin@snapfixindia.space / admin123" -ForegroundColor White
+Write-Host "  • Staff: staff@snapfixindia.space / staff123" -ForegroundColor White
+Write-Host "  • Student: student@snapfixindia.space / student123" -ForegroundColor White
 Write-Host ""
-Write-Host "🔧 Useful Commands:" -ForegroundColor Cyan
+Write-Host "Useful Commands:" -ForegroundColor Cyan
 Write-Host "  • View logs: docker-compose logs -f" -ForegroundColor White
 Write-Host "  • Stop services: docker-compose down" -ForegroundColor White
 Write-Host "  • Restart services: docker-compose restart" -ForegroundColor White

@@ -18,7 +18,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     List<User> findByRole(UserRole role);
     
-    @Query("SELECT u FROM User u WHERE u.role IN ('STAFF', 'ADMIN', 'DEPARTMENT_HEAD')")
+    @Query("SELECT u FROM User u WHERE u.role IN ('STAFF', 'ADMIN', 'DEPARTMENT_HEAD', 'STUDENT')")
     List<User> findStaffUsers();
     
     @Query("SELECT u FROM User u WHERE u.role = 'STAFF' AND u.id NOT IN " +

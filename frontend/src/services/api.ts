@@ -293,5 +293,22 @@ export const dashboardApi = {
   // Change password
   async changePassword(passwordData: { currentPassword: string; newPassword: string }): Promise<ApiResponse<string>> {
     return apiClient.post<string>('/auth/change-password', passwordData);
+  },
+
+  // Student Management APIs
+  async getStudents(): Promise<ApiResponse<any[]>> {
+    return apiClient.get<any[]>('/users/staff');
+  },
+
+  async createStudent(studentData: { name: string; email: string; password: string; role: string; points: number }): Promise<ApiResponse<any>> {
+    return apiClient.post<any>('/users', studentData);
+  },
+
+  async updateStudent(id: number, studentData: { name: string; email: string; password?: string; role: string; points: number }): Promise<ApiResponse<any>> {
+    return apiClient.put<any>(`/users/${id}`, studentData);
+  },
+
+  async deleteStudent(id: number): Promise<ApiResponse<any>> {
+    return apiClient.delete<any>(`/users/${id}`);
   }
 };

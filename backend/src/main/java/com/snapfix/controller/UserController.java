@@ -24,6 +24,17 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        try {
+            List<UserResponse> users = userService.getAllUsers();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            System.err.println("Error fetching all users: " + e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
+    }
+
     @GetMapping("/staff")
     public ResponseEntity<List<UserResponse>> getStaffMembers() {
         try {
