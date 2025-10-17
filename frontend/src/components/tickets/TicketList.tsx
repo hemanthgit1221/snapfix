@@ -63,6 +63,17 @@ const TicketList: React.FC = () => {
       filtered = filtered.filter(ticket => {
         // Handle both string and enum status values
         const ticketStatus = typeof ticket.status === 'string' ? ticket.status : String(ticket.status);
+        
+        // Special handling for IN_PROGRESS filter to include AT_SITE and WAITING_FOR_MATERIAL
+        if (filter === 'IN_PROGRESS') {
+          return ['IN_PROGRESS', 'AT_SITE', 'WAITING_FOR_MATERIAL'].includes(ticketStatus);
+        }
+        
+        // Special handling for RESOLVED filter to include both RESOLVED and CLOSED
+        if (filter === 'RESOLVED') {
+          return ['RESOLVED', 'CLOSED'].includes(ticketStatus);
+        }
+        
         return ticketStatus === filter;
       });
     }
@@ -208,7 +219,7 @@ const TicketList: React.FC = () => {
           </div>
           
           <div className="flex gap-2">
-            {['ALL', 'PENDING', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED'].map((status) => (
+            {['ALL', 'PENDING', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilter(status)}
@@ -218,7 +229,9 @@ const TicketList: React.FC = () => {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {status === 'ALL' ? 'All' : status.replace('_', ' ')}
+                {status === 'ALL' ? 'All' : 
+                 status === 'RESOLVED' ? 'RESOLVED & CLOSED' : 
+                 status.replace('_', ' ')}
               </button>
             ))}
           </div>

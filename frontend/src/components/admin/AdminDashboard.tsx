@@ -33,33 +33,16 @@ const AdminDashboard: React.FC = () => {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch all data in parallel
-        const [statsResponse, recentTicketsResponse, unassignedTicketsResponse] = await Promise.all([
-          dashboardApi.getAdminStats(),
-          dashboardApi.getAllTickets(),
-          dashboardApi.getUnassignedTickets()
-        ]);
-        
-        const allTickets = recentTicketsResponse as any;
-        const pendingTicketsFiltered = allTickets.filter((ticket: any) => ticket.status === 'PENDING');
-        
-        setStats(statsResponse as any);
-        setRecentTickets(allTickets.slice(0, 5)); // Show 5 most recent
-        setUnassignedTickets(unassignedTicketsResponse as any);
-        setPendingTickets(pendingTicketsFiltered);
-      } catch (err: any) {
-        console.error('Failed to fetch admin dashboard data:', err);
-        // Keep existing mock data on error
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
+  }, []);
+
+  // Refresh dashboard data periodically to keep counts up-to-date
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   const statCards = [
@@ -205,9 +188,35 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleStaffUpdate = async () => {
-    // This function can be called to refresh staff data in the modal
-    // For now, we don't need to do anything specific here since the modal handles its own refresh
-    console.log('Staff data updated in modal');
+    // Refresh dashboard data when staff data is updated (e.g., after ticket assignment)
+    console.log('Staff data updated - refreshing dashboard data');
+    await fetchDashboardData();
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all data in parallel
+      const [statsResponse, recentTicketsResponse, unassignedTicketsResponse] = await Promise.all([
+        dashboardApi.getAdminStats(),
+        dashboardApi.getAllTickets(),
+        dashboardApi.getUnassignedTickets()
+      ]);
+      
+      const allTickets = recentTicketsResponse as any;
+      const pendingTicketsFiltered = allTickets.filter((ticket: any) => ticket.status === 'PENDING');
+      
+      setStats(statsResponse as any);
+      setRecentTickets(allTickets.slice(0, 5)); // Show 5 most recent
+      setUnassignedTickets(unassignedTicketsResponse as any);
+      setPendingTickets(pendingTicketsFiltered);
+    } catch (err: any) {
+      console.error('Failed to fetch admin dashboard data:', err);
+      // Keep existing mock data on error
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -534,9 +543,11 @@ const AdminDashboard: React.FC = () => {
       {selectedTicket && (
         <AssignTicketModal
           isOpen={showAssignModal}
-          onClose={() => {
+          onClose={async () => {
             setShowAssignModal(false);
             setSelectedTicket(null);
+            // Refresh dashboard data when modal is closed to get updated counts
+            await fetchDashboardData();
           }}
           onAssign={handleAssignToStaff}
           ticketId={selectedTicket.ticketId}

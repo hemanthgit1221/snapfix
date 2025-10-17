@@ -110,10 +110,16 @@ public class UserController {
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteById(id);
-            return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "User deleted successfully"
+            ));
         } catch (Exception e) {
             System.err.println("Error deleting user: " + e.getMessage());
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to delete user"));
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "error", "Failed to delete user"
+            ));
         }
     }
 

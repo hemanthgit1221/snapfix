@@ -3,11 +3,14 @@ package com.snapfix.service;
 import com.snapfix.dto.UserResponse;
 import com.snapfix.entity.User;
 import com.snapfix.entity.UserRole;
+import com.snapfix.entity.TicketStatus;
 import com.snapfix.repository.UserRepository;
+import com.snapfix.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,6 +21,9 @@ public class UserService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private TicketRepository ticketRepository;
     
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
@@ -44,7 +50,7 @@ public class UserService {
     public List<UserResponse> getStaffUsers() {
         return userRepository.findStaffUsers()
                 .stream()
-                .map(this::convertToUserResponse)
+                .map(this::convertToUserResponseWithAssignedTickets)
                 .collect(Collectors.toList());
     }
     
@@ -112,6 +118,24 @@ public class UserService {
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
         response.setPoints(user.getPoints());
+        return response;
+    }
+    
+    public UserResponse convertToUserResponseWithAssignedTickets(User user) {
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setName(user.getName());
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
+        response.setPoints(user.getPoints());
+        
+        // Calculate assigned ticket count for staff members (including all active statuses)
+        long assignedTicketCount = ticketRepository.countByAssignedToAndStatusIn(
+            user, 
+            Arrays.asList(TicketStatus.PENDING, TicketStatus.IN_PROGRESS, TicketStatus.AT_SITE, TicketStatus.WAITING_FOR_MATERIAL)
+        );
+        response.setAssignedTickets((int) assignedTicketCount);
+        
         return response;
     }
 }

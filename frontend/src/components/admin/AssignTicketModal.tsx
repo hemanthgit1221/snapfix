@@ -4,7 +4,8 @@ import {
   XMarkIcon,
   UserIcon,
   CheckIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { dashboardApi } from '../../services/api';
 
@@ -38,6 +39,8 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Function to fetch staff data
   const fetchStaff = async () => {
@@ -53,7 +56,7 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
         email: user.email,
         role: user.role,
         isActive: true, // Assume all users are active
-        assignedTickets: user.points || 0 // Backend stores assigned ticket count in points field
+        assignedTickets: user.assignedTickets || 0 // Use assignedTickets field from backend
       }));
       
       setStaff(transformedStaff);
@@ -67,10 +70,20 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
     }
   };
 
-  // Mock staff data - replace with actual API call
+  // Fetch staff data when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchStaff();
+    }
+  }, [isOpen]);
+
+  // Reset selected staff when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedStaff(null);
+      setSearchTerm('');
+      setAssigning(false);
+      setSuccessMessage(null);
     }
   }, [isOpen]);
 
@@ -82,14 +95,32 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
   );
 
   const handleAssign = async () => {
-    if (selectedStaff) {
-      await onAssign(selectedStaff.id);
-      // Refresh staff data to update workload counts
-      await fetchStaff();
-      if (onStaffUpdate) {
-        onStaffUpdate();
+    if (selectedStaff && !assigning) {
+      setAssigning(true);
+      setSuccessMessage(null);
+      try {
+        await onAssign(selectedStaff.id);
+        
+        // Show success message
+        setSuccessMessage(`Ticket successfully assigned to ${selectedStaff.name}!`);
+        
+        // Refresh staff data to update workload counts
+        await fetchStaff();
+        if (onStaffUpdate) {
+          onStaffUpdate();
+        }
+        
+        // Close modal after a short delay to show success message
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      } catch (error) {
+        console.error('Failed to assign ticket:', error);
+        setSuccessMessage('Failed to assign ticket. Please try again.');
+        // Keep modal open on error so user can retry
+      } finally {
+        setAssigning(false);
       }
-      onClose();
     }
   };
 
@@ -139,19 +170,54 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
           </button>
         </div>
 
-        {/* Search */}
+        {/* Search and Refresh */}
         <div className="p-4 sm:p-6 border-b border-gray-200">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search staff members..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-            <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search staff members..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              />
+              <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            </div>
+            <button
+              onClick={fetchStaff}
+              disabled={loading}
+              className="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title="Refresh staff data"
+            >
+              <svg className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
           </div>
         </div>
+
+        {/* Success/Error Message */}
+        {successMessage && (
+          <div className={`p-4 sm:p-6 border-b border-gray-200 ${
+            successMessage.includes('successfully') 
+              ? 'bg-green-50 border-green-200' 
+              : 'bg-red-50 border-red-200'
+          }`}>
+            <div className={`flex items-center gap-2 ${
+              successMessage.includes('successfully') 
+                ? 'text-green-800' 
+                : 'text-red-800'
+            }`}>
+              {successMessage.includes('successfully') ? (
+                <CheckIcon className="h-5 w-5" />
+              ) : (
+                <ExclamationTriangleIcon className="h-5 w-5" />
+              )}
+              <span className="text-sm font-medium">{successMessage}</span>
+            </div>
+          </div>
+        )}
 
         {/* Staff List */}
         <div className="flex-1 overflow-y-auto min-h-0">
@@ -228,10 +294,18 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
           </button>
           <button
             onClick={handleAssign}
-            disabled={!selectedStaff}
+            disabled={!selectedStaff || assigning}
             className="px-4 sm:px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
           >
-            {selectedStaff ? (
+            {assigning ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Assigning...</span>
+              </>
+            ) : selectedStaff ? (
               <span className="truncate">
                 Assign to {selectedStaff.name.length > 15 ? `${selectedStaff.name.substring(0, 15)}...` : selectedStaff.name}
               </span>

@@ -25,10 +25,10 @@ spring:
           time_zone: Asia/Kolkata
         
   mail:
-    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
-    port: ${SPRING_MAIL_PORT:587}
-    username: ${SPRING_MAIL_USERNAME:update@snapfixindia.space}
-    password: ${SPRING_MAIL_PASSWORD:opcbodthpqjnlfji}
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -38,12 +38,6 @@ spring:
           connectiontimeout: 5000
           timeout: 3000
           writetimeout: 5000
-          debug: true
-        debug: true
-        transport:
-          protocol: smtp
-        session:
-          debug: true
     default-encoding: UTF-8
             
   servlet:
@@ -93,13 +87,8 @@ logging:
   level:
     com.snapfix: DEBUG
     org.springframework.security: DEBUG
-    org.springframework.mail: DEBUG
-    org.springframework.mail.javamail: DEBUG
-    com.sun.mail: DEBUG
-    javax.mail: DEBUG
-    org.springframework.web: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 # Application Configuration
 app:

@@ -27,3 +27,10 @@ Write-Host "   Run: docker-compose logs -f backend | Select-String -Pattern 'mai
 
 Write-Host "`n=== Ready to test! Create a ticket and watch for email logs ===" -ForegroundColor Green
 
+
+
+
+
+
+
+

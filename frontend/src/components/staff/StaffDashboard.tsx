@@ -56,7 +56,19 @@ const StaffDashboard: React.FC = () => {
 
   const filteredTickets = (filterStatus === 'ALL' 
     ? assignedTickets 
-    : assignedTickets.filter(ticket => ticket.status === filterStatus)
+    : assignedTickets.filter(ticket => {
+        // Special handling for IN_PROGRESS filter to include AT_SITE and WAITING_FOR_MATERIAL
+        if (filterStatus === TicketStatus.IN_PROGRESS) {
+          return ['IN_PROGRESS', 'AT_SITE', 'WAITING_FOR_MATERIAL'].includes(ticket.status);
+        }
+        
+        // Special handling for RESOLVED filter to include both RESOLVED and CLOSED
+        if (filterStatus === TicketStatus.RESOLVED) {
+          return ['RESOLVED', 'CLOSED'].includes(ticket.status);
+        }
+        
+        return ticket.status === filterStatus;
+      })
   ).sort((a, b) => {
     const dateA = new Date(a.createdAt).getTime();
     const dateB = new Date(b.createdAt).getTime();
@@ -66,10 +78,11 @@ const StaffDashboard: React.FC = () => {
   const stats = {
     total: assignedTickets.length,
     pending: assignedTickets.filter(t => t.status === 'PENDING').length,
-    inProgress: assignedTickets.filter(t => t.status === 'IN_PROGRESS').length,
+    inProgress: assignedTickets.filter(t => ['IN_PROGRESS', 'AT_SITE', 'WAITING_FOR_MATERIAL'].includes(t.status)).length,
     atSite: assignedTickets.filter(t => t.status === 'AT_SITE').length,
     waitingForMaterial: assignedTickets.filter(t => t.status === 'WAITING_FOR_MATERIAL').length,
-    resolved: assignedTickets.filter(t => t.status === 'RESOLVED').length,
+    resolved: assignedTickets.filter(t => ['RESOLVED', 'CLOSED'].includes(t.status)).length,
+    rejected: assignedTickets.filter(t => t.status === 'REJECTED').length,
   };
 
   const handleStatusUpdate = async (ticketId: number, newStatus: TicketStatus) => {
@@ -385,7 +398,17 @@ const StaffDashboard: React.FC = () => {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Resolved ({stats.resolved})
+              RESOLVED & CLOSED ({stats.resolved})
+            </button>
+            <button
+              onClick={() => setFilterStatus(TicketStatus.REJECTED)}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                filterStatus === TicketStatus.REJECTED
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Rejected ({stats.rejected})
             </button>
           </div>
         </div>

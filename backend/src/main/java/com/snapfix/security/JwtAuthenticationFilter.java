@@ -68,6 +68,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
         
         try {
+            System.out.println("JWT Filter: Token length: " + token.length());
+            System.out.println("JWT Filter: Token starts with: " + token.substring(0, Math.min(20, token.length())));
+            
             String email = extractEmailFromToken(token);
             System.out.println("JWT Filter: Extracted email: " + email);
             
@@ -81,9 +84,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("JWT Filter: Authentication set successfully");
                 } else {
-                    System.out.println("JWT Filter: Token validation failed");
+                    System.out.println("JWT Filter: Token validation failed - userDetails: " + (userDetails != null) + ", tokenValid: " + isTokenValid(token, userDetails));
                 }
+            } else {
+                System.out.println("JWT Filter: Email is null or authentication already exists");
             }
         } catch (Exception e) {
             System.out.println("JWT Filter: Exception during authentication: " + e.getMessage());

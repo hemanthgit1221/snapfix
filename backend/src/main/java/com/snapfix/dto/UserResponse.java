@@ -10,6 +10,7 @@ public class UserResponse {
     private String email;
     private UserRole role;
     private Integer points;
+    private Integer assignedTickets;
     private LocalDateTime createdAt;
     
     // Constructors
@@ -21,6 +22,16 @@ public class UserResponse {
         this.email = email;
         this.role = role;
         this.points = points;
+        this.assignedTickets = 0;
+    }
+    
+    public UserResponse(Long id, String name, String email, UserRole role, Integer points, Integer assignedTickets) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.role = role;
+        this.points = points;
+        this.assignedTickets = assignedTickets;
     }
     
     // Getters and Setters
@@ -70,5 +81,13 @@ public class UserResponse {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+    
+    public Integer getAssignedTickets() {
+        return assignedTickets;
+    }
+    
+    public void setAssignedTickets(Integer assignedTickets) {
+        this.assignedTickets = assignedTickets;
     }
 }

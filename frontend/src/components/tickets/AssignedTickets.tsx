@@ -54,16 +54,28 @@ const AssignedTickets: React.FC = () => {
 
   const filteredTickets = activeTab === 'ALL' 
     ? assignedTickets 
-    : assignedTickets.filter(ticket => ticket.status === activeTab);
+    : assignedTickets.filter(ticket => {
+        // Special handling for IN_PROGRESS filter to include AT_SITE and WAITING_FOR_MATERIAL
+        if (activeTab === TicketStatus.IN_PROGRESS) {
+          return ['IN_PROGRESS', 'AT_SITE', 'WAITING_FOR_MATERIAL'].includes(ticket.status);
+        }
+        
+        // Special handling for RESOLVED filter to include both RESOLVED and CLOSED
+        if (activeTab === TicketStatus.RESOLVED) {
+          return ['RESOLVED', 'CLOSED'].includes(ticket.status);
+        }
+        
+        return ticket.status === activeTab;
+      });
 
   const stats = {
     total: assignedTickets.length,
     pending: assignedTickets.filter(t => t.status === 'PENDING').length,
-    inProgress: assignedTickets.filter(t => t.status === 'IN_PROGRESS').length,
+    inProgress: assignedTickets.filter(t => ['IN_PROGRESS', 'AT_SITE', 'WAITING_FOR_MATERIAL'].includes(t.status)).length,
     atSite: assignedTickets.filter(t => t.status === 'AT_SITE').length,
     waitingForMaterial: assignedTickets.filter(t => t.status === 'WAITING_FOR_MATERIAL').length,
-    resolved: assignedTickets.filter(t => t.status === 'RESOLVED').length,
-    closed: assignedTickets.filter(t => t.status === 'CLOSED').length,
+    resolved: assignedTickets.filter(t => ['RESOLVED', 'CLOSED'].includes(t.status)).length,
+    rejected: assignedTickets.filter(t => t.status === 'REJECTED').length,
   };
 
   const handleStatusUpdate = async (ticketId: number, newStatus: TicketStatus) => {
@@ -281,17 +293,17 @@ const AssignedTickets: React.FC = () => {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Resolved ({stats.resolved})
+              RESOLVED & CLOSED ({stats.resolved})
             </button>
             <button
-              onClick={() => setActiveTab(TicketStatus.CLOSED)}
+              onClick={() => setActiveTab(TicketStatus.REJECTED)}
               className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === TicketStatus.CLOSED
+                activeTab === TicketStatus.REJECTED
                   ? 'bg-primary-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Closed ({stats.closed})
+              Rejected ({stats.rejected})
             </button>
           </div>
         </div>

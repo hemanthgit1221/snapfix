@@ -62,19 +62,19 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
     },
     {
       status: TicketStatus.RESOLVED,
-      label: 'Resolved',
+      label: 'RESOLVED & CLOSED',
       description: 'Issue has been fixed and verified',
       icon: <CheckCircleIcon className="h-5 w-5" />,
       color: 'bg-green-100 text-green-800 border-green-200',
       hoverColor: 'hover:bg-green-200'
     },
     {
-      status: TicketStatus.CLOSED,
-      label: 'Closed',
-      description: 'Ticket is closed and no further action needed',
-      icon: <CheckCircleIcon className="h-5 w-5" />,
-      color: 'bg-gray-100 text-gray-800 border-gray-200',
-      hoverColor: 'hover:bg-gray-200'
+      status: TicketStatus.REJECTED,
+      label: 'Rejected',
+      description: 'Ticket has been rejected and will not be processed',
+      icon: <ExclamationTriangleIcon className="h-5 w-5" />,
+      color: 'bg-red-100 text-red-800 border-red-200',
+      hoverColor: 'hover:bg-red-200'
     }
   ];
 

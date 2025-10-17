@@ -136,8 +136,8 @@ const StaffManagement: React.FC = () => {
       const response = await dashboardApi.deleteStaffMember(staffId);
       console.log('Delete response:', response);
       
-      // Check if response has success property or if it's the message directly
-      if (response.success || response.data?.message) {
+      // Check if response has success property, data.message, or direct message property
+      if (response.success || response.data?.message || response.message) {
         window.location.reload(); // Refresh the list
         alert('Staff member deleted successfully!');
       } else {
@@ -145,7 +145,7 @@ const StaffManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Error deleting staff member:', error);
-      alert('Failed to delete staff member');
+      alert('Failed to delete staff member. Please try again.');
     }
   };
 

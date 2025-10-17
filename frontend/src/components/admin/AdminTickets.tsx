@@ -52,7 +52,19 @@ const AdminTickets: React.FC = () => {
 
     // Apply status filter
     if (filter !== 'ALL') {
-      filtered = filtered.filter(ticket => ticket.status === filter);
+      filtered = filtered.filter(ticket => {
+        // Special handling for IN_PROGRESS filter to include AT_SITE and WAITING_FOR_MATERIAL
+        if (filter === 'IN_PROGRESS') {
+          return ['IN_PROGRESS', 'AT_SITE', 'WAITING_FOR_MATERIAL'].includes(ticket.status);
+        }
+        
+        // Special handling for RESOLVED filter to include both RESOLVED and CLOSED
+        if (filter === 'RESOLVED') {
+          return ['RESOLVED', 'CLOSED'].includes(ticket.status);
+        }
+        
+        return ticket.status === filter;
+      });
     }
 
     // Apply search filter
@@ -137,8 +149,8 @@ const AdminTickets: React.FC = () => {
   const filterTabs = [
     { key: 'ALL', label: 'All', count: tickets.length },
     { key: 'PENDING', label: 'Pending', count: tickets.filter(t => t.status === 'PENDING').length },
-    { key: 'IN_PROGRESS', label: 'In Progress', count: tickets.filter(t => t.status === 'IN_PROGRESS').length },
-    { key: 'RESOLVED', label: 'Resolved', count: tickets.filter(t => t.status === 'RESOLVED').length },
+    { key: 'IN_PROGRESS', label: 'In Progress', count: tickets.filter(t => ['IN_PROGRESS', 'AT_SITE', 'WAITING_FOR_MATERIAL'].includes(t.status)).length },
+    { key: 'RESOLVED', label: 'RESOLVED & CLOSED', count: tickets.filter(t => ['RESOLVED', 'CLOSED'].includes(t.status)).length },
     { key: 'REJECTED', label: 'Rejected', count: tickets.filter(t => t.status === 'REJECTED').length },
   ];
 

@@ -297,7 +297,7 @@ export const dashboardApi = {
 
   // Student Management APIs
   async getStudents(): Promise<ApiResponse<any[]>> {
-    return apiClient.get<any[]>('/users/staff');
+    return apiClient.get<any[]>('/users');
   },
 
   async createStudent(studentData: { name: string; email: string; password: string; role: string; points: number }): Promise<ApiResponse<any>> {
