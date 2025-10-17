@@ -58,7 +58,7 @@ public class Ticket {
     
     @Column(name = "priority")
     @Enumerated(EnumType.STRING)
-    private TicketPriority priority = TicketPriority.MEDIUM;
+    private TicketPriority priority;
     
     @CreationTimestamp
     @Column(name = "created_at")

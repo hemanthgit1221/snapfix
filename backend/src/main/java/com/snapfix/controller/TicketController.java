@@ -60,7 +60,18 @@ public class TicketController {
         request.setBuilding(building);
         request.setCategory(category);
         request.setDescription(description);
-        request.setPriority(priority != null ? priority : TicketPriority.MEDIUM);
+        
+        // Debug logging for priority
+        System.out.println("🎯 TicketController: Received priority parameter: " + priority);
+        System.out.println("🎯 TicketController: Priority type: " + (priority != null ? priority.getClass().getSimpleName() : "null"));
+        
+        if (priority != null) {
+            request.setPriority(priority);
+            System.out.println("🎯 TicketController: Set priority to: " + priority);
+        } else {
+            request.setPriority(TicketPriority.MEDIUM);
+            System.out.println("🎯 TicketController: No priority provided, defaulting to MEDIUM");
+        }
         
         User currentUser = (User) authentication.getPrincipal();
         

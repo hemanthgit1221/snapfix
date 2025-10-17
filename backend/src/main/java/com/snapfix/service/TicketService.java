@@ -295,7 +295,9 @@ public class TicketService {
         ticket.setBuilding(request.getBuilding());
         ticket.setCategory(request.getCategory());
         ticket.setDescription(request.getDescription());
+        
         ticket.setPriority(request.getPriority());
+        
         ticket.setStatus(TicketStatus.PENDING);
         
         // Set duplicate information if provided

@@ -78,6 +78,7 @@ export const ticketService = {
     if (ticketData.building) formData.append('building', ticketData.building);
     formData.append('category', ticketData.category);
     formData.append('description', ticketData.description);
+    if (ticketData.priority) formData.append('priority', ticketData.priority);
     if (ticketData.photo) formData.append('photo', ticketData.photo);
     formData.append('forceCreate', forceCreate.toString());
     if (parentTicketId) formData.append('parentTicketId', parentTicketId);

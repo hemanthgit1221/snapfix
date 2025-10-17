@@ -14,7 +14,7 @@ const CreateTicket: React.FC = () => {
     building: '',
     category: TicketCategory.OTHERS,
     description: '',
-    priority: 'MEDIUM'
+    priority: TicketPriority.MEDIUM
   });
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -311,10 +311,10 @@ const CreateTicket: React.FC = () => {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               >
-                <option value="LOW">Low</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HIGH">High</option>
-                <option value="URGENT">Urgent</option>
+                <option value={TicketPriority.LOW}>Low</option>
+                <option value={TicketPriority.MEDIUM}>Medium</option>
+                <option value={TicketPriority.HIGH}>High</option>
+                <option value={TicketPriority.URGENT}>Urgent</option>
               </select>
             </div>
           </div>

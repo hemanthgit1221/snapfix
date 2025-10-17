@@ -11,6 +11,20 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "🚀 Starting SnapFix Deployment..." -ForegroundColor Blue
 
+# Increment version number
+Write-Status "Incrementing deployment version..."
+try {
+    $newVersion = & ".\increment-version.ps1"
+    Write-Success "Deployment version set to: $newVersion"
+    
+    # Copy version to backend resources
+    Copy-Item "version.txt" "..\backend\src\main\resources\version.txt" -Force
+    Write-Status "Version file updated in backend resources"
+} catch {
+    Write-Warning "Could not increment version: $($_.Exception.Message)"
+    Write-Warning "Using default version: 500"
+}
+
 # Function to print colored output
 function Write-Status {
     param([string]$Message)
