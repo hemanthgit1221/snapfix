@@ -244,7 +244,7 @@ const CreateTicket: React.FC = () => {
                 onChange={handleInputChange}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                placeholder="e.g., 101, A205"
+                placeholder="e.g., 101, 302, 201...."
               />
             </div>
             
@@ -274,7 +274,7 @@ const CreateTicket: React.FC = () => {
                 value={formData.building}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                placeholder="e.g., Main Building, Science Block"
+                placeholder="e.g., ICT, CRL...."
               />
             </div>
           </div>
@@ -296,7 +296,7 @@ const CreateTicket: React.FC = () => {
                 <option value={TicketCategory.PLUMBING}>Plumbing</option>
                 <option value={TicketCategory.ELECTRICAL}>Electrical</option>
                 <option value={TicketCategory.HOUSEKEEPING}>Housekeeping</option>
-                <option value={TicketCategory.AC_WATER}>AC/Water</option>
+                <option value={TicketCategory.AC_WATER}>AC</option>
                 <option value={TicketCategory.OTHERS}>Others</option>
               </select>
             </div>

@@ -73,8 +73,8 @@ const TicketDetails: React.FC = () => {
         const ticketData = (response as any);
         setTicket(ticketData);
         
-        // TODO: Fetch real comments when comment API is available
-        setComments([]);
+        // Fetch comments for this ticket
+        await fetchComments();
       } catch (error) {
         console.error('Failed to fetch ticket details:', error);
         setTicket(null);
@@ -151,24 +151,50 @@ const TicketDetails: React.FC = () => {
     }
   };
 
+  const fetchComments = async () => {
+    if (!ticketId) {
+      console.log('No ticketId available for fetching comments');
+      return;
+    }
+    
+    try {
+      console.log('Fetching comments for ticketId:', ticketId);
+      const response = await dashboardApi.getTicketComments(ticketId);
+      if (response.success) {
+        setComments(response.data || []);
+        console.log('Comments fetched successfully:', response.data);
+      } else {
+        console.error('Failed to fetch comments:', response.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch comments:', error);
+    }
+  };
+
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !ticketId) {
+      console.log('Cannot add comment - missing newComment or ticketId:', { newComment: newComment.trim(), ticketId });
+      return;
+    }
 
     setSubmittingComment(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const comment: TicketComment = {
-      id: comments.length + 1,
-      ticket: ticket!,
-      user: user!,
-      comment: newComment,
-      createdAt: new Date().toISOString()
-    };
-
-    setComments([...comments, comment]);
-    setNewComment('');
-    setSubmittingComment(false);
+    try {
+      console.log('Adding comment for ticketId:', ticketId, 'comment:', newComment);
+      const response = await dashboardApi.addComment(ticketId, newComment);
+      console.log('Add comment response:', response);
+      if (response.success) {
+        // Refresh comments after successful post
+        await fetchComments();
+        setNewComment('');
+        console.log('Comment added successfully');
+      } else {
+        console.error('Failed to add comment:', response.message);
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    } finally {
+      setSubmittingComment(false);
+    }
   };
 
   const handleImageClick = (imageUrl: string, ticketId: string) => {
@@ -463,7 +489,7 @@ const TicketDetails: React.FC = () => {
                   <div className="flex-1">
                     <div className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-medium text-gray-900">{comment.user.name}</p>
+                        <p className="text-sm font-medium text-gray-900">{comment.userName}</p>
                         <p className="text-xs text-gray-500">
                           <span title={formatDateOnly(comment.createdAt)}>
                             {formatRelativeTime(comment.createdAt)}

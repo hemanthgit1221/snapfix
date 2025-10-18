@@ -1,11 +1,14 @@
 package com.snapfix.service;
 
 import com.snapfix.dto.CreateTicketRequest;
+import com.snapfix.dto.CreateRewardRequest;
 import com.snapfix.dto.DuplicateCheckResponse;
 import com.snapfix.dto.TicketResponse;
+import com.snapfix.dto.TicketCommentResponse;
 import com.snapfix.dto.RewardStatsResponse;
 import com.snapfix.entity.Ticket;
 import com.snapfix.entity.TicketComment;
+import com.snapfix.entity.TicketPriority;
 import com.snapfix.entity.TicketStatus;
 import com.snapfix.entity.User;
 import com.snapfix.entity.UserRole;
@@ -437,6 +440,17 @@ public class TicketService {
         
         if (status == TicketStatus.RESOLVED) {
             ticket.setResolvedAt(LocalDateTime.now());
+            
+            // Award points based on priority
+            int points = getPointsForPriority(ticket.getPriority());
+            if (points > 0) {
+                CreateRewardRequest rewardRequest = new CreateRewardRequest();
+                rewardRequest.setUserId(ticket.getUser().getId());
+                rewardRequest.setTicketId(ticket.getId());
+                rewardRequest.setPoints(points);
+                rewardRequest.setReason("Ticket resolved: " + ticket.getTicketId());
+                rewardService.createReward(rewardRequest);
+            }
         }
         
         ticket = ticketRepository.save(ticket);
@@ -508,6 +522,52 @@ public class TicketService {
         }
         
         return commentRepository.findByTicketOrderByCreatedAtAsc(ticketOpt.get());
+    }
+    
+    public TicketComment addCommentByTicketId(String ticketId, String comment, User user) {
+        Optional<Ticket> ticketOpt = ticketRepository.findByTicketId(ticketId);
+        if (ticketOpt.isEmpty()) {
+            throw new RuntimeException("Ticket not found");
+        }
+        
+        TicketComment ticketComment = new TicketComment();
+        ticketComment.setTicket(ticketOpt.get());
+        ticketComment.setUser(user);
+        ticketComment.setComment(comment);
+        
+        return commentRepository.save(ticketComment);
+    }
+    
+    public List<TicketComment> getTicketCommentsByTicketId(String ticketId) {
+        Optional<Ticket> ticketOpt = ticketRepository.findByTicketId(ticketId);
+        if (ticketOpt.isEmpty()) {
+            throw new RuntimeException("Ticket not found");
+        }
+        
+        return commentRepository.findByTicketOrderByCreatedAtAsc(ticketOpt.get());
+    }
+    
+    public List<TicketCommentResponse> getTicketCommentsResponseByTicketId(String ticketId) {
+        Optional<Ticket> ticketOpt = ticketRepository.findByTicketId(ticketId);
+        if (ticketOpt.isEmpty()) {
+            throw new RuntimeException("Ticket not found");
+        }
+        
+        List<TicketComment> comments = commentRepository.findByTicketOrderByCreatedAtAsc(ticketOpt.get());
+        return comments.stream()
+                .map(this::convertToCommentResponse)
+                .collect(Collectors.toList());
+    }
+    
+    public TicketCommentResponse convertToCommentResponse(TicketComment comment) {
+        TicketCommentResponse response = new TicketCommentResponse();
+        response.setId(comment.getId());
+        response.setComment(comment.getComment());
+        response.setCreatedAt(comment.getCreatedAt());
+        response.setUserName(comment.getUser().getName());
+        response.setUserEmail(comment.getUser().getEmail());
+        response.setTicketId(comment.getTicket().getTicketId());
+        return response;
     }
     
     private TicketResponse convertToResponse(Ticket ticket) {
@@ -684,5 +744,15 @@ public class TicketService {
         newUser.setPoints(0);
         
         return userRepository.save(newUser);
+    }
+    
+    private int getPointsForPriority(TicketPriority priority) {
+        switch (priority) {
+            case LOW: return 25;
+            case MEDIUM: return 50;
+            case HIGH: return 100;
+            case URGENT: return 150;
+            default: return 0;
+        }
     }
 }

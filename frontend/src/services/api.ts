@@ -1,3 +1,5 @@
+import { TicketComment } from '../types';
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 export interface ApiResponse<T> {
@@ -266,8 +268,12 @@ export const dashboardApi = {
     return apiClient.get<Ticket>(`/tickets/ticket/${ticketId}`);
   },
 
-  async addComment(ticketId: number, comment: string): Promise<ApiResponse<any>> {
-    return apiClient.post<any>(`/tickets/${ticketId}/comments?comment=${comment}`);
+  async addComment(ticketId: string, comment: string): Promise<ApiResponse<any>> {
+    return apiClient.post<any>(`/tickets/comments/${ticketId}?comment=${comment}`);
+  },
+
+  async getTicketComments(ticketId: string): Promise<ApiResponse<TicketComment[]>> {
+    return apiClient.get<TicketComment[]>(`/tickets/comments/${ticketId}`);
   },
 
   // Get staff members for assignment

@@ -1,3 +1,4 @@
+com\snapfix\service\TicketService$1.class
 com\snapfix\service\TicketService$TicketWithSimilarity.class
 com\snapfix\repository\VoucherRepository.class
 com\snapfix\service\JwtService.class
@@ -16,7 +17,6 @@ com\snapfix\controller\AuthController$ChangePasswordRequest.class
 com\snapfix\dto\VoucherResponse.class
 com\snapfix\dto\CreateTicketRequest.class
 com\snapfix\entity\TicketComment.class
-com\snapfix\entity\Achievement.class
 com\snapfix\dto\VoucherRedemptionResponse.class
 com\snapfix\repository\TicketRepository.class
 com\snapfix\entity\TicketCategory.class
@@ -30,7 +30,6 @@ com\snapfix\config\WebConfig.class
 com\snapfix\service\DataInitializationService.class
 com\snapfix\repository\VoucherRedemptionRepository.class
 com\snapfix\dto\DuplicateCheckResponse.class
-com\snapfix\service\RewardService$AchievementDefinition.class
 com\snapfix\controller\UserController$UpdateUserRequest.class
 com\snapfix\entity\Voucher.class
 com\snapfix\service\TicketService.class
@@ -48,7 +47,6 @@ com\snapfix\service\EmailService.class
 com\snapfix\dto\CommentResponse.class
 com\snapfix\SnapFixBackendApplication.class
 com\snapfix\dto\UserLeaderboardResponse.class
-com\snapfix\repository\AchievementRepository.class
 com\snapfix\security\JwtAuthenticationEntryPoint.class
 com\snapfix\security\JwtAuthenticationFilter.class
 com\snapfix\service\RewardService.class

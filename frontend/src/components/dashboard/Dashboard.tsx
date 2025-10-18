@@ -175,13 +175,13 @@ const Dashboard: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate('/rewards')}
+            onClick={() => navigate('/rewards/vouchers')}
             className="flex items-center space-x-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
           >
             <div className="p-2 bg-purple-500 rounded-lg">
               <GiftIcon className="h-5 w-5 text-white" />
             </div>
-            <span className="font-medium text-gray-900">Check Rewards</span>
+            <span className="font-medium text-gray-900">Redeem Vouchers</span>
           </motion.button>
         </div>
       </motion.div>

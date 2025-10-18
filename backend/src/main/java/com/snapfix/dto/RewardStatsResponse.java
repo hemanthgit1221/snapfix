@@ -7,6 +7,8 @@ public class RewardStatsResponse {
     private Integer redeemedPoints;
     private Integer totalRewards;
     private Integer totalVouchers;
+    private Integer ticketsResolved;
+    private Integer vouchersRedeemed;
     private Integer nextMilestone;
     private Integer pointsToNextMilestone;
     
@@ -68,5 +70,21 @@ public class RewardStatsResponse {
     
     public void setPointsToNextMilestone(Integer pointsToNextMilestone) {
         this.pointsToNextMilestone = pointsToNextMilestone;
+    }
+    
+    public Integer getTicketsResolved() {
+        return ticketsResolved;
+    }
+    
+    public void setTicketsResolved(Integer ticketsResolved) {
+        this.ticketsResolved = ticketsResolved;
+    }
+    
+    public Integer getVouchersRedeemed() {
+        return vouchersRedeemed;
+    }
+    
+    public void setVouchersRedeemed(Integer vouchersRedeemed) {
+        this.vouchersRedeemed = vouchersRedeemed;
     }
 }

@@ -38,4 +38,6 @@ public interface VoucherRedemptionRepository extends JpaRepository<VoucherRedemp
     
     @Query("SELECT vr FROM VoucherRedemption vr WHERE vr.user = :user ORDER BY vr.redeemedAt DESC")
     List<VoucherRedemption> findByUserOrderByRedeemedAtDesc(@Param("user") User user);
+    
+    List<VoucherRedemption> findByUserAndVoucher(User user, Voucher voucher);
 }

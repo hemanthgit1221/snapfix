@@ -202,6 +202,12 @@ public class RewardService {
             throw new RuntimeException("Voucher redemption limit reached");
         }
         
+        // Check if already redeemed by this user
+        List<VoucherRedemption> existingRedemptions = voucherRedemptionRepository.findByUserAndVoucher(user, voucher);
+        if (!existingRedemptions.isEmpty()) {
+            throw new RuntimeException("Voucher already redeemed");
+        }
+        
         // Check if user has enough points
         if (user.getPoints() == null || user.getPoints() < voucher.getPointsRequired()) {
             throw new RuntimeException("Insufficient points");
@@ -246,6 +252,10 @@ public class RewardService {
         return voucherRedemptionRepository.findByUserOrderByRedeemedAtDesc(currentUser).stream()
             .map(this::convertToVoucherRedemptionResponse)
             .collect(Collectors.toList());
+    }
+    
+    public List<VoucherRedemptionResponse> getUserRedeemedVouchers(Long userId) {
+        return getUserVoucherRedemptions(userId);
     }
     
     public VoucherRedemptionResponse useVoucherRedemption(Long redemptionId) {
@@ -296,7 +306,8 @@ public class RewardService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        Long totalPoints = rewardRepository.getTotalPointsByUser(user);
+        // Use the user's current points from the users table instead of calculating from rewards
+        int totalPoints = user.getPoints() != null ? user.getPoints() : 0;
         List<Reward> allRewards = rewardRepository.findByUser(user);
         List<VoucherRedemption> redemptions = voucherRedemptionRepository.findByUser(user);
         
@@ -304,17 +315,18 @@ public class RewardService {
             .mapToInt(VoucherRedemption::getPointsUsed)
             .sum();
         
-        int availablePoints = (totalPoints != null ? totalPoints.intValue() : 0) - redeemedPoints;
+        // Available points is the current user points (after redemptions)
+        int availablePoints = totalPoints;
         
         RewardStatsResponse stats = new RewardStatsResponse();
-        stats.setTotalPoints(totalPoints != null ? totalPoints.intValue() : 0);
+        stats.setTotalPoints(totalPoints);
         stats.setAvailablePoints(availablePoints);
         stats.setRedeemedPoints(redeemedPoints);
         stats.setTotalRewards(allRewards.size());
         stats.setTotalVouchers(redemptions.size());
         
         // Calculate next milestone
-        int currentPoints = totalPoints != null ? totalPoints.intValue() : 0;
+        int currentPoints = totalPoints;
         int nextMilestone = ((currentPoints / 100) + 1) * 100;
         stats.setNextMilestone(nextMilestone);
         stats.setPointsToNextMilestone(nextMilestone - currentPoints);
@@ -360,6 +372,41 @@ public class RewardService {
         int points = totalPoints != null ? totalPoints.intValue() : 0;
         List<Reward> rewards = rewardRepository.findByUser(user);
         
+        // Check and award achievement points for unlocked achievements
+        // First Ticket Achievement
+        if (rewards.size() >= 1 && !hasAchievement(user, "first_ticket")) {
+            createAchievementReward(user, 25, "first_ticket: First Ticket Achievement");
+        }
+        
+        // Points Milestones
+        if (points >= 100 && !hasAchievement(user, "points_100")) {
+            createAchievementReward(user, 50, "points_100: Century Club Achievement");
+        }
+        
+        if (points >= 500 && !hasAchievement(user, "points_500")) {
+            createAchievementReward(user, 100, "points_500: Half Grand Achievement");
+        }
+        
+        if (points >= 1000 && !hasAchievement(user, "points_1000")) {
+            createAchievementReward(user, 200, "points_1000: Grand Master Achievement");
+        }
+        
+        // Ticket Count Achievements
+        if (rewards.size() >= 5 && !hasAchievement(user, "tickets_5")) {
+            createAchievementReward(user, 50, "tickets_5: Ticket Master Achievement");
+        }
+        
+        if (rewards.size() >= 10 && !hasAchievement(user, "tickets_10")) {
+            createAchievementReward(user, 100, "tickets_10: Problem Solver Achievement");
+        }
+        
+        // Refresh user and rewards after potential updates
+        user = userRepository.findById(userId).orElse(user);
+        totalPoints = rewardRepository.getTotalPointsByUser(user);
+        points = totalPoints != null ? totalPoints.intValue() : 0;
+        rewards = rewardRepository.findByUser(user);
+        
+        // Build achievement responses
         // First Ticket Achievement
         if (rewards.size() >= 1) {
             AchievementResponse achievement = new AchievementResponse();
@@ -380,7 +427,7 @@ public class RewardService {
             achievement.setName("Century Club");
             achievement.setDescription("Earned 100 points");
             achievement.setIcon("💯");
-            achievement.setPoints(100);
+            achievement.setPoints(50);
             achievement.setUnlocked(true);
             achievements.add(achievement);
         }
@@ -391,7 +438,7 @@ public class RewardService {
             achievement.setName("Half Grand");
             achievement.setDescription("Earned 500 points");
             achievement.setIcon("🏆");
-            achievement.setPoints(500);
+            achievement.setPoints(100);
             achievement.setUnlocked(true);
             achievements.add(achievement);
         }
@@ -402,7 +449,7 @@ public class RewardService {
             achievement.setName("Grand Master");
             achievement.setDescription("Earned 1000 points");
             achievement.setIcon("👑");
-            achievement.setPoints(1000);
+            achievement.setPoints(200);
             achievement.setUnlocked(true);
             achievements.add(achievement);
         }
@@ -431,6 +478,25 @@ public class RewardService {
         }
         
         return achievements;
+    }
+    
+    private void createAchievementReward(User user, int points, String description) {
+        Reward achievementReward = new Reward();
+        achievementReward.setUser(user);
+        achievementReward.setPoints(points);
+        achievementReward.setReason(description);
+        achievementReward.setDescription(description);
+        achievementReward.setVoucherStatus(VoucherStatus.ACHIEVEMENT);
+        rewardRepository.save(achievementReward);
+        
+        user.setPoints((user.getPoints() != null ? user.getPoints() : 0) + points);
+        userRepository.save(user);
+    }
+    
+    private boolean hasAchievement(User user, String achievementId) {
+        return rewardRepository.findByUser(user).stream()
+            .anyMatch(r -> r.getVoucherStatus() == VoucherStatus.ACHIEVEMENT && 
+                          r.getReason() != null && r.getReason().startsWith(achievementId + ":"));
     }
     
     // Helper methods
@@ -475,15 +541,19 @@ public class RewardService {
     private VoucherRedemptionResponse convertToVoucherRedemptionResponse(VoucherRedemption redemption) {
         VoucherRedemptionResponse response = new VoucherRedemptionResponse();
         response.setId(redemption.getId());
-        response.setVoucher(convertToVoucherResponse(redemption.getVoucher()));
-        response.setUser(convertUserToResponse(redemption.getUser()));
         response.setPointsUsed(redemption.getPointsUsed());
         response.setRedeemedAt(redemption.getRedeemedAt());
         response.setStatus(redemption.getStatus());
         response.setExpiryDate(redemption.getExpiryDate());
         response.setUsedAt(redemption.getUsedAt());
         response.setVoucherCode(redemption.getVoucherCode());
-        response.setCreatedAt(redemption.getCreatedAt());
+        
+        if (redemption.getVoucher() != null) {
+            response.setVoucherName(redemption.getVoucher().getName());
+            response.setVoucherDescription(redemption.getVoucher().getDescription());
+            response.setDiscount(redemption.getVoucher().getDiscount());
+        }
+        
         return response;
     }
     

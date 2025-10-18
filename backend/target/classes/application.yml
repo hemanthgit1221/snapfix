@@ -59,7 +59,7 @@ supabase:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:mySecretKey}
+  secret: ${JWT_SECRET:myVerySecretKeyThatIsLongEnoughForHMACSHA256Algorithm}
   expiration: 86400000 # 24 hours
 
 # CORS Configuration

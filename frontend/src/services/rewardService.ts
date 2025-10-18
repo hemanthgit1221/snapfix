@@ -32,6 +32,11 @@ export interface VoucherRedemption {
   redeemedAt: string;
   status: 'ACTIVE' | 'USED' | 'EXPIRED';
   expiryDate: string;
+  usedAt?: string;
+  voucherCode: string;
+  voucherName?: string;
+  voucherDescription?: string;
+  discount?: string;
 }
 
 export interface RewardStats {
@@ -40,6 +45,8 @@ export interface RewardStats {
   redeemedPoints: number;
   totalRewards: number;
   totalVouchers: number;
+  ticketsResolved: number;
+  vouchersRedeemed: number;
   nextMilestone: number;
   pointsToNextMilestone: number;
 }
@@ -70,53 +77,57 @@ export const rewardService = {
 
   // Vouchers
   async getAvailableVouchers(): Promise<ApiResponse<Voucher[]>> {
-    return apiClient.get<Voucher[]>('/vouchers/available');
+    return apiClient.get<Voucher[]>('/rewards/vouchers/available');
   },
 
   async getAllVouchers(): Promise<ApiResponse<Voucher[]>> {
-    return apiClient.get<Voucher[]>('/vouchers');
+    return apiClient.get<Voucher[]>('/rewards/vouchers');
   },
 
   async getVoucherById(id: number): Promise<ApiResponse<Voucher>> {
-    return apiClient.get<Voucher>(`/vouchers/${id}`);
+    return apiClient.get<Voucher>(`/rewards/vouchers/${id}`);
   },
 
   async createVoucher(voucherData: Omit<Voucher, 'id'>): Promise<ApiResponse<Voucher>> {
-    return apiClient.post<Voucher>('/vouchers', voucherData);
+    return apiClient.post<Voucher>('/rewards/vouchers', voucherData);
   },
 
   async updateVoucher(id: number, voucherData: Partial<Voucher>): Promise<ApiResponse<Voucher>> {
-    return apiClient.put<Voucher>(`/vouchers/${id}`, voucherData);
+    return apiClient.put<Voucher>(`/rewards/vouchers/${id}`, voucherData);
   },
 
   async deleteVoucher(id: number): Promise<ApiResponse<void>> {
-    return apiClient.delete<void>(`/vouchers/${id}`);
+    return apiClient.delete<void>(`/rewards/vouchers/${id}`);
   },
 
   async activateVoucher(id: number): Promise<ApiResponse<Voucher>> {
-    return apiClient.put<Voucher>(`/vouchers/${id}/activate`);
+    return apiClient.put<Voucher>(`/rewards/vouchers/${id}/activate`);
   },
 
   async deactivateVoucher(id: number): Promise<ApiResponse<Voucher>> {
-    return apiClient.put<Voucher>(`/vouchers/${id}/deactivate`);
+    return apiClient.put<Voucher>(`/rewards/vouchers/${id}/deactivate`);
   },
 
   // Voucher Redemptions
   async redeemVoucher(voucherId: number): Promise<ApiResponse<VoucherRedemption>> {
-    return apiClient.post<VoucherRedemption>('/vouchers/redeem', { voucherId });
+    return apiClient.post<VoucherRedemption>(`/rewards/vouchers/redeem?voucherId=${voucherId}`);
   },
 
   async getUserVoucherRedemptions(userId?: number): Promise<ApiResponse<VoucherRedemption[]>> {
-    const endpoint = userId ? `/vouchers/redemptions/user/${userId}` : '/vouchers/redemptions/my';
+    const endpoint = userId ? `/rewards/vouchers/redemptions/user/${userId}` : '/rewards/vouchers/redemptions/my';
     return apiClient.get<VoucherRedemption[]>(endpoint);
   },
 
+  async getRedeemedVouchers(): Promise<ApiResponse<VoucherRedemption[]>> {
+    return apiClient.get<VoucherRedemption[]>('/rewards/vouchers/redemptions/my');
+  },
+
   async useVoucherRedemption(redemptionId: number): Promise<ApiResponse<VoucherRedemption>> {
-    return apiClient.put<VoucherRedemption>(`/vouchers/redemptions/${redemptionId}/use`);
+    return apiClient.put<VoucherRedemption>(`/rewards/vouchers/redemptions/${redemptionId}/use`);
   },
 
   async cancelVoucherRedemption(redemptionId: number): Promise<ApiResponse<void>> {
-    return apiClient.delete<void>(`/vouchers/redemptions/${redemptionId}`);
+    return apiClient.delete<void>(`/rewards/vouchers/redemptions/${redemptionId}`);
   },
 
   // Statistics and Analytics

@@ -1,21 +1,20 @@
 package com.snapfix.dto;
 
 import com.snapfix.entity.VoucherRedemptionStatus;
-
 import java.time.LocalDateTime;
 
 public class VoucherRedemptionResponse {
     
     private Long id;
-    private VoucherResponse voucher;
-    private UserResponse user;
+    private String voucherCode;
     private Integer pointsUsed;
     private LocalDateTime redeemedAt;
-    private VoucherRedemptionStatus status;
     private LocalDateTime expiryDate;
+    private VoucherRedemptionStatus status;
     private LocalDateTime usedAt;
-    private String voucherCode;
-    private LocalDateTime createdAt;
+    private String voucherName;
+    private String voucherDescription;
+    private String discount;
     
     // Constructors
     public VoucherRedemptionResponse() {}
@@ -29,20 +28,12 @@ public class VoucherRedemptionResponse {
         this.id = id;
     }
     
-    public VoucherResponse getVoucher() {
-        return voucher;
+    public String getVoucherCode() {
+        return voucherCode;
     }
     
-    public void setVoucher(VoucherResponse voucher) {
-        this.voucher = voucher;
-    }
-    
-    public UserResponse getUser() {
-        return user;
-    }
-    
-    public void setUser(UserResponse user) {
-        this.user = user;
+    public void setVoucherCode(String voucherCode) {
+        this.voucherCode = voucherCode;
     }
     
     public Integer getPointsUsed() {
@@ -61,20 +52,20 @@ public class VoucherRedemptionResponse {
         this.redeemedAt = redeemedAt;
     }
     
-    public VoucherRedemptionStatus getStatus() {
-        return status;
-    }
-    
-    public void setStatus(VoucherRedemptionStatus status) {
-        this.status = status;
-    }
-    
     public LocalDateTime getExpiryDate() {
         return expiryDate;
     }
     
     public void setExpiryDate(LocalDateTime expiryDate) {
         this.expiryDate = expiryDate;
+    }
+    
+    public VoucherRedemptionStatus getStatus() {
+        return status;
+    }
+    
+    public void setStatus(VoucherRedemptionStatus status) {
+        this.status = status;
     }
     
     public LocalDateTime getUsedAt() {
@@ -85,19 +76,27 @@ public class VoucherRedemptionResponse {
         this.usedAt = usedAt;
     }
     
-    public String getVoucherCode() {
-        return voucherCode;
+    public String getVoucherName() {
+        return voucherName;
     }
     
-    public void setVoucherCode(String voucherCode) {
-        this.voucherCode = voucherCode;
+    public void setVoucherName(String voucherName) {
+        this.voucherName = voucherName;
     }
     
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public String getVoucherDescription() {
+        return voucherDescription;
     }
     
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setVoucherDescription(String voucherDescription) {
+        this.voucherDescription = voucherDescription;
+    }
+    
+    public String getDiscount() {
+        return discount;
+    }
+    
+    public void setDiscount(String discount) {
+        this.discount = discount;
     }
 }

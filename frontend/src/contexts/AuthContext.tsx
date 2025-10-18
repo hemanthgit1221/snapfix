@@ -1,13 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthResponse } from '../types';
 import { authService } from '../services/authService';
+import { rewardService } from '../services/rewardService';
 import { updateApiClientToken } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  userPoints: number;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUserPoints: () => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
 }
@@ -21,6 +24,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [userPoints, setUserPoints] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,6 +36,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(userData);
           setToken(storedToken);
           updateApiClientToken(storedToken); // Sync token with API client
+          // Refresh user points on page load
+          await refreshUserPoints();
         } catch (error) {
           console.error('Failed to validate token:', error);
           localStorage.removeItem('token');
@@ -56,6 +62,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('token', response.token);
       updateApiClientToken(response.token); // Sync token with API client
       console.log('AuthContext: Token stored and synced with API client');
+      
+      // Fetch user points after successful login
+      await refreshUserPoints();
     } catch (error) {
       console.error('AuthContext: Login failed:', error);
       throw error;
@@ -64,9 +73,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshUserPoints = async () => {
+    try {
+      const response = await rewardService.getRewardStats();
+      if (response.success) {
+        setUserPoints(response.data.totalPoints || 0);
+      }
+    } catch (error) {
+      console.error('Failed to refresh user points:', error);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
+    setUserPoints(0);
     localStorage.removeItem('token');
     updateApiClientToken(null); // Clear token from API client
   };
@@ -74,8 +95,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     token,
+    userPoints,
     login,
     logout,
+    refreshUserPoints,
     isLoading,
     isAuthenticated: !!user && !!token,
   };

@@ -21,6 +21,8 @@ interface RewardStats {
   redeemedPoints: number;
   totalRewards: number;
   totalVouchers: number;
+  ticketsResolved: number;
+  vouchersRedeemed: number;
   nextMilestone: number;
   pointsToNextMilestone: number;
 }
@@ -47,7 +49,7 @@ interface LeaderboardUser {
 }
 
 const RewardDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, userPoints, refreshUserPoints } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<RewardStats | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -71,6 +73,8 @@ const RewardDashboard: React.FC = () => {
       if (achievementsResponse.success) {
         console.log('Achievements loaded:', achievementsResponse.data);
         setAchievements(achievementsResponse.data);
+        // Refresh user points after achievements are loaded (they may have awarded points)
+        await refreshUserPoints();
       } else {
         console.log('Achievements API failed:', achievementsResponse);
       }
@@ -161,7 +165,7 @@ const RewardDashboard: React.FC = () => {
             <div className="flex items-center space-x-2">
               <SparklesIcon className="h-8 w-8" />
               <div>
-                <p className="text-3xl font-bold">{stats?.totalPoints || 0}</p>
+                <p className="text-3xl font-bold">{userPoints}</p>
                 <p className="text-sm opacity-90">Total Points</p>
               </div>
             </div>
@@ -180,7 +184,7 @@ const RewardDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Available Points</p>
-              <p className="text-2xl font-bold text-green-600">{stats?.availablePoints || 0}</p>
+              <p className="text-2xl font-bold text-green-600">{userPoints}</p>
             </div>
             <div className="p-3 bg-green-100 rounded-lg">
               <GiftIcon className="h-6 w-6 text-green-600" />
@@ -197,7 +201,7 @@ const RewardDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Tickets Resolved</p>
-              <p className="text-2xl font-bold text-blue-600">{stats?.totalRewards || 0}</p>
+              <p className="text-2xl font-bold text-blue-600">{stats?.ticketsResolved || 0}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <TrophyIcon className="h-6 w-6 text-blue-600" />
@@ -214,7 +218,7 @@ const RewardDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Vouchers Redeemed</p>
-              <p className="text-2xl font-bold text-purple-600">{stats?.totalVouchers || 0}</p>
+              <p className="text-2xl font-bold text-purple-600">{stats?.vouchersRedeemed || 0}</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-lg">
               <StarIcon className="h-6 w-6 text-purple-600" />

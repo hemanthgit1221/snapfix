@@ -3,6 +3,7 @@ package com.snapfix.controller;
 import com.snapfix.dto.CreateTicketRequest;
 import com.snapfix.dto.DuplicateCheckResponse;
 import com.snapfix.dto.TicketResponse;
+import com.snapfix.dto.TicketCommentResponse;
 import com.snapfix.entity.TicketStatus;
 import com.snapfix.entity.TicketPriority;
 import com.snapfix.entity.TicketCategory;
@@ -18,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -288,14 +290,19 @@ public class TicketController {
         }
     }
     
-    @PostMapping("/{id}/comments")
-    public ResponseEntity<TicketComment> addComment(
-            @PathVariable Long id,
+    @PostMapping("/comments/{ticketId}")
+    public ResponseEntity<Map<String, Object>> addComment(
+            @PathVariable String ticketId,
             @RequestParam String comment,
             Authentication authentication) {
         
         User currentUser = (User) authentication.getPrincipal();
-        TicketComment response = ticketService.addComment(id, comment, currentUser);
+        TicketComment commentEntity = ticketService.addCommentByTicketId(ticketId, comment, currentUser);
+        TicketCommentResponse commentResponse = ticketService.convertToCommentResponse(commentEntity);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", commentResponse);
         return ResponseEntity.ok(response);
     }
     
@@ -320,12 +327,12 @@ public class TicketController {
         return ResponseEntity.ok(stats);
     }
     
-    @GetMapping("/{id}/comments")
-    public ResponseEntity<List<TicketComment>> getTicketComments(@PathVariable Long id, Authentication authentication) {
+    @GetMapping("/comments/{ticketId}")
+    public ResponseEntity<Map<String, Object>> getTicketComments(@PathVariable String ticketId, Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
         
         // Check if user has access to this ticket
-        Optional<TicketResponse> ticketOpt = ticketService.getTicketById(id);
+        Optional<TicketResponse> ticketOpt = ticketService.getTicketByTicketId(ticketId);
         if (ticketOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -336,8 +343,11 @@ public class TicketController {
             currentUser.getRole().name().equals("ADMIN") || 
             currentUser.getRole().name().equals("DEPARTMENT_HEAD")) {
             
-            List<TicketComment> comments = ticketService.getTicketComments(id);
-            return ResponseEntity.ok(comments);
+            List<TicketCommentResponse> comments = ticketService.getTicketCommentsResponseByTicketId(ticketId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", comments);
+            return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(403).build();
         }

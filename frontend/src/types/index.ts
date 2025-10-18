@@ -66,10 +66,11 @@ export enum TicketPriority {
 
 export interface TicketComment {
   id: number;
-  ticket: Ticket;
-  user: User;
   comment: string;
   createdAt: string;
+  userName: string;
+  userEmail: string;
+  ticketId: string;
 }
 
 export interface Reward {

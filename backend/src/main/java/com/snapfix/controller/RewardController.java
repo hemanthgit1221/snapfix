@@ -62,9 +62,12 @@ public class RewardController {
     }
     
     @GetMapping("/vouchers/available")
-    public ResponseEntity<List<VoucherResponse>> getAvailableVouchers() {
+    public ResponseEntity<Map<String, Object>> getAvailableVouchers() {
         List<VoucherResponse> vouchers = rewardService.getAvailableVouchers();
-        return ResponseEntity.ok(vouchers);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", vouchers);
+        return ResponseEntity.ok(response);
     }
     
     @GetMapping("/vouchers")
@@ -107,25 +110,41 @@ public class RewardController {
     
     // Voucher Redemption
     @PostMapping("/vouchers/redeem")
-    public ResponseEntity<VoucherRedemptionResponse> redeemVoucher(
+    public ResponseEntity<Map<String, Object>> redeemVoucher(
             @RequestParam Long voucherId,
             Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
         VoucherRedemptionResponse response = rewardService.redeemVoucher(voucherId, currentUser);
-        return ResponseEntity.ok(response);
+        Map<String, Object> apiResponse = new HashMap<>();
+        apiResponse.put("success", true);
+        apiResponse.put("data", response);
+        return ResponseEntity.ok(apiResponse);
     }
     
     @GetMapping("/vouchers/redemptions/my")
-    public ResponseEntity<List<VoucherRedemptionResponse>> getMyVoucherRedemptions(Authentication authentication) {
+    public ResponseEntity<Map<String, Object>> getMyVoucherRedemptions(Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
         List<VoucherRedemptionResponse> redemptions = rewardService.getMyVoucherRedemptions(currentUser);
-        return ResponseEntity.ok(redemptions);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", redemptions);
+        return ResponseEntity.ok(response);
     }
     
     @GetMapping("/vouchers/redemptions/user/{userId}")
     public ResponseEntity<List<VoucherRedemptionResponse>> getUserVoucherRedemptions(@PathVariable Long userId) {
         List<VoucherRedemptionResponse> redemptions = rewardService.getUserVoucherRedemptions(userId);
         return ResponseEntity.ok(redemptions);
+    }
+    
+    @GetMapping("/vouchers/redeemed")
+    public ResponseEntity<Map<String, Object>> getRedeemedVouchers(Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        List<VoucherRedemptionResponse> redeemed = rewardService.getUserRedeemedVouchers(currentUser.getId());
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", redeemed);
+        return ResponseEntity.ok(response);
     }
     
     @PutMapping("/vouchers/redemptions/{redemptionId}/use")
