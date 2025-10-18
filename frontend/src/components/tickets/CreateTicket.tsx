@@ -112,6 +112,7 @@ const CreateTicket: React.FC = () => {
         building: formData.building,
         category: formData.category,
         description: formData.description,
+        priority: formData.priority as TicketPriority,
         photo: photo || new File([], '')
       };
 
