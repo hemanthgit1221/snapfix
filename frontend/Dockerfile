@@ -1,17 +1,23 @@
 # Multi-stage build for React application
 FROM node:18-alpine AS build
 
+# Accept build arguments
+ARG REACT_APP_API_URL=http://localhost:8080/api
+
 # Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (include dev dependencies for build)
+RUN npm ci
 
 # Copy source code
 COPY . .
+
+# Set environment variables for build
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 
 # Build the application
 RUN npm run build

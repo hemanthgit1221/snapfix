@@ -93,4 +93,6 @@ logging:
 # Application Configuration
 app:
   name: SnapFix
+  data:
+    initialize: false  # Set to true to auto-create test users on startup
 

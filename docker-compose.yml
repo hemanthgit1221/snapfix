@@ -1,7 +1,9 @@
+version: '3.8'
+
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: snapfix-postgres
     environment:
       POSTGRES_DB: snapfix
@@ -12,14 +14,19 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - snapfix-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U snapfix_user -d snapfix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Spring Boot Backend
   backend:
     build:
-      context: ../backend
+      context: ./backend
       dockerfile: Dockerfile
     container_name: snapfix-backend
     environment:
@@ -32,26 +39,35 @@ services:
       TZ: Asia/Kolkata
       SPRING_MAIL_HOST: smtp.gmail.com
       SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: update12@snapfixindia.space
-      SPRING_MAIL_PASSWORD: rbinpwsmcmwmydon
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-update12@snapfixindia.space}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-hritjrevbanzvtnw}
+      # CORS configuration for ngrok
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
     ports:
       - "8080:8080"
     volumes:
       - uploads_data:/app/uploads
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - snapfix-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # React Frontend
   frontend:
     build:
-      context: ../frontend
+      context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8080/api}
     container_name: snapfix-frontend
-    environment:
-      REACT_APP_API_URL: http://backend:8080/api
     ports:
       - "3000:80"
     depends_on:
@@ -59,11 +75,36 @@ services:
     networks:
       - snapfix-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Database Dashboard
+  # Ngrok - Expose services for testing
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: snapfix-ngrok
+    command:
+      - start
+      - --all
+      - --config
+      - /etc/ngrok.yml
+    ports:
+      - "4040:4040"  # Ngrok web interface
+    volumes:
+      - ./ngrok.yml:/etc/ngrok.yml:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - snapfix-network
+    restart: unless-stopped
+
+  # Optional: Database Dashboard
   db-dashboard:
     build:
-      context: ../db-dashboard
+      context: ./db-dashboard
       dockerfile: Dockerfile
     container_name: snapfix-db-dashboard
     environment:
@@ -76,34 +117,20 @@ services:
     ports:
       - "3001:3001"
     depends_on:
-      - postgres
-    networks:
-      - snapfix-network
-    restart: unless-stopped
-
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: snapfix-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/nginx/ssl
-    depends_on:
-      - frontend
-      - backend
-      - db-dashboard
+      postgres:
+        condition: service_healthy
     networks:
       - snapfix-network
     restart: unless-stopped
 
 volumes:
   postgres_data:
+    driver: local
   uploads_data:
+    driver: local
 
 networks:
   snapfix-network:
     driver: bridge
+
 

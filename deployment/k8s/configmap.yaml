@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: snapfix-config
+  namespace: snapfix
+  labels:
+    app: snapfix
+data:
+  # Database Configuration
+  POSTGRES_DB: "snapfix"
+  POSTGRES_USER: "snapfix_user"
+  
+  # JWT Configuration
+  JWT_EXPIRATION: "86400000"
+  
+  # Spring Boot Configuration
+  SPRING_PROFILES_ACTIVE: "production"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-service:5432/snapfix"
+  
+  # Email Configuration
+  SPRING_MAIL_HOST: "smtp.gmail.com"
+  SPRING_MAIL_PORT: "587"
+  
+  # Frontend Configuration
+  REACT_APP_API_URL: "https://your-domain.com/api"
+  
+  # Security Configuration
+  CORS_ORIGINS: "https://your-domain.com,https://www.your-domain.com"
+  
+  # File Storage Configuration
+  STORAGE_TYPE: "local"
+  STORAGE_PATH: "/app/uploads"
+  
+  # Logging Configuration
+  LOG_LEVEL: "INFO"
+  
+  # Timezone
+  TZ: "Asia/Kolkata"
+  
+  # Production Settings
+  ENVIRONMENT: "production"
+  DEBUG: "false"

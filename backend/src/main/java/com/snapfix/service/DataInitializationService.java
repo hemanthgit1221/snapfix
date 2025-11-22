@@ -9,6 +9,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+    name = "app.data.initialize", 
+    havingValue = "true", 
+    matchIfMissing = false
+)
 public class DataInitializationService implements CommandLineRunner {
     
     @Autowired
