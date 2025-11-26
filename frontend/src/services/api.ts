@@ -265,7 +265,9 @@ export const dashboardApi = {
 
   // Common APIs
   async getTicketDetails(ticketId: string): Promise<ApiResponse<Ticket>> {
-    return apiClient.get<Ticket>(`/tickets/ticket/${ticketId}`);
+    const response = await apiClient.get<Ticket>(`/tickets/ticket/${ticketId}`);
+    // Backend returns TicketResponse directly, not wrapped
+    return response as any;
   },
 
   async addComment(ticketId: string, comment: string): Promise<ApiResponse<any>> {

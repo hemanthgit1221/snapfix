@@ -10,11 +10,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
-        {/* Sidebar */}
+        {/* Sidebar - Fixed on all screen sizes */}
         <Sidebar />
         
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col lg:ml-64">
+        {/* Main Content - Add margin for fixed sidebar on desktop */}
+        <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
           <Header />
           <main className="flex-1 p-4 lg:p-6">
             {children}

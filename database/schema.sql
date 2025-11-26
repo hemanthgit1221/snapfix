@@ -12,6 +12,10 @@ CREATE TABLE users (
     role VARCHAR(20) NOT NULL CHECK (role IN ('STUDENT', 'FACULTY', 'STAFF', 'ADMIN', 'DEPARTMENT_HEAD')),
     points INTEGER DEFAULT 0,
     supabase_user_id VARCHAR(255),
+    is_flagged BOOLEAN DEFAULT FALSE,
+    is_blacklisted BOOLEAN DEFAULT FALSE,
+    flagged_at TIMESTAMP,
+    blacklisted_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -72,6 +76,8 @@ CREATE INDEX idx_tickets_assigned_to ON tickets(assigned_to);
 CREATE INDEX idx_tickets_created_at ON tickets(created_at);
 CREATE INDEX idx_ticket_comments_ticket_id ON ticket_comments(ticket_id);
 CREATE INDEX idx_rewards_user_id ON rewards(user_id);
+CREATE INDEX idx_users_is_flagged ON users(is_flagged);
+CREATE INDEX idx_users_is_blacklisted ON users(is_blacklisted);
 
 -- Composite index for duplicate check optimization
 CREATE INDEX idx_tickets_duplicate_check ON tickets(room_number, category, status);

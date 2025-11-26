@@ -59,6 +59,9 @@ public class TicketService {
     @Autowired
     private RewardService rewardService;
     
+    @Autowired
+    private UserService userService;
+    
     public DuplicateCheckResponse checkForDuplicates(CreateTicketRequest request) {
         List<Ticket> potentialDuplicates;
         
@@ -288,6 +291,11 @@ public class TicketService {
     }
     
     public TicketResponse createTicket(CreateTicketRequest request, User user, MultipartFile photo, boolean forceCreate, String parentTicketId) {
+        // Check if user is blacklisted
+        if (user.getIsBlacklisted() != null && user.getIsBlacklisted()) {
+            throw new RuntimeException("Your access has been revoked. Contact your admin.");
+        }
+        
         // Note: Duplicate checking is now handled by the frontend before calling this method
         // This method will only be called when forceCreate=true or when no duplicates were found
         
@@ -453,6 +461,21 @@ public class TicketService {
             }
         }
         
+        // If rejecting a ticket from a flagged user, automatically blacklist them
+        if (status == TicketStatus.REJECTED) {
+            User ticketUser = ticket.getUser();
+            if (ticketUser.getIsFlagged() != null && ticketUser.getIsFlagged()) {
+                userService.blacklistUser(ticketUser.getId());
+                // Send notification email about blacklisting
+                try {
+                    emailService.sendTicketStatusUpdateNotification(ticket, user);
+                } catch (Exception e) {
+                    // Log error but don't fail the operation
+                    System.err.println("Failed to send blacklist notification email: " + e.getMessage());
+                }
+            }
+        }
+        
         ticket = ticketRepository.save(ticket);
         
         // Send notification email
@@ -587,6 +610,11 @@ public class TicketService {
         response.setCreatedAt(ticket.getCreatedAt());
         response.setUpdatedAt(ticket.getUpdatedAt());
         response.setResolvedAt(ticket.getResolvedAt());
+        
+        // Flag and blacklist status from ticket user
+        User ticketUser = ticket.getUser();
+        response.setUserIsFlagged(ticketUser.getIsFlagged() != null && ticketUser.getIsFlagged());
+        response.setUserIsBlacklisted(ticketUser.getIsBlacklisted() != null && ticketUser.getIsBlacklisted());
         
         // Duplicate ticket information
         response.setIsDuplicate(ticket.getIsDuplicate());

@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { TicketCategory, TicketPriority, DuplicateCheckResponse } from '../../types';
-import { CameraIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CameraIcon, XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { ticketService } from '../../services/ticketService';
+import { useAuth } from '../../contexts/AuthContext';
 import DuplicateWarningModal from './DuplicateWarningModal';
 
 const CreateTicket: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     roomNumber: '',
     floor: '',
@@ -24,6 +26,7 @@ const CreateTicket: React.FC = () => {
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
   const [isCreatingDuplicate, setIsCreatingDuplicate] = useState(false);
+  const isBlacklisted = user?.isBlacklisted || false;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -84,6 +87,13 @@ const CreateTicket: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if user is blacklisted
+    if (isBlacklisted) {
+      setError('Your access has been revoked. Contact your admin.');
+      return;
+    }
+    
     setIsSubmitting(true);
     setError('');
 
@@ -99,7 +109,12 @@ const CreateTicket: React.FC = () => {
       await createTicket(false);
     } catch (err: any) {
       console.error('Failed to create ticket:', err);
-      setError(err.message || 'Failed to create ticket. Please try again.');
+      const errorMessage = err.message || 'Failed to create ticket. Please try again.';
+      if (errorMessage.includes('access has been revoked')) {
+        setError('Your access has been revoked. Contact your admin.');
+      } else {
+        setError(errorMessage);
+      }
       setIsSubmitting(false);
     }
   };
@@ -207,24 +222,49 @@ const CreateTicket: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
       >
-        <h1 className="text-2xl font-bold text-gray-900 font-poppins">Create New Ticket</h1>
-        <p className="text-gray-600 mt-2">Report a new issue with photo and details</p>
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold font-poppins">Create New Ticket</h1>
+          <p className="text-blue-100 mt-2">Report a new issue with photo and details</p>
+        </div>
       </motion.div>
+
+      {/* Blacklist Warning Banner */}
+      {isBlacklisted && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-3xl shadow-xl p-6 border-2 border-red-300"
+        >
+          <div className="flex items-center gap-4">
+            <ExclamationTriangleIcon className="h-8 w-8 flex-shrink-0" />
+            <div>
+              <h3 className="text-xl font-bold font-poppins mb-1">Access Revoked</h3>
+              <p className="text-red-100">Your access has been revoked. Contact your admin.</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className={`bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20 ${isBlacklisted ? 'opacity-50 pointer-events-none' : ''}`}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+              className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm shadow-md"
             >
               {error}
             </motion.div>
@@ -243,7 +283,7 @@ const CreateTicket: React.FC = () => {
                 value={formData.roomNumber}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
                 placeholder="e.g., 101, 302, 201...."
               />
             </div>
@@ -258,7 +298,7 @@ const CreateTicket: React.FC = () => {
                 name="floor"
                 value={formData.floor}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
                 placeholder="e.g., 1st, Ground"
               />
             </div>
@@ -273,7 +313,7 @@ const CreateTicket: React.FC = () => {
                 name="building"
                 value={formData.building}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
                 placeholder="e.g., ICT, CRL...."
               />
             </div>
@@ -291,7 +331,7 @@ const CreateTicket: React.FC = () => {
                 value={formData.category}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
               >
                 <option value={TicketCategory.PLUMBING}>Plumbing</option>
                 <option value={TicketCategory.ELECTRICAL}>Electrical</option>
@@ -310,7 +350,7 @@ const CreateTicket: React.FC = () => {
                 name="priority"
                 value={formData.priority}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
               >
                 <option value={TicketPriority.LOW}>Low</option>
                 <option value={TicketPriority.MEDIUM}>Medium</option>
@@ -332,7 +372,7 @@ const CreateTicket: React.FC = () => {
               onChange={handleInputChange}
               required
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
               placeholder="Please provide a detailed description of the issue..."
             />
           </div>
@@ -342,29 +382,31 @@ const CreateTicket: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Photo (Required)
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gradient-to-br from-gray-50 to-blue-50/30 hover:border-indigo-400 transition-all duration-300">
               {photoPreview ? (
-                <div className="relative">
+                <div className="relative inline-block">
                   <img
                     src={photoPreview}
                     alt="Preview"
-                    className="mx-auto h-32 w-32 object-cover rounded-lg"
+                    className="mx-auto h-40 w-40 object-cover rounded-xl shadow-lg"
                   />
-                  <button
+                  <motion.button
                     type="button"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={removePhoto}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all"
                   >
                     <XMarkIcon className="h-4 w-4" />
-                  </button>
+                  </motion.button>
                 </div>
               ) : (
                 <div>
-                  <CameraIcon className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="mt-2">
+                  <CameraIcon className="mx-auto h-16 w-16 text-gray-400" />
+                  <div className="mt-4">
                     <label
                       htmlFor="photo"
-                      className="cursor-pointer bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                      className="cursor-pointer inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                     >
                       Choose Photo
                     </label>
@@ -377,7 +419,7 @@ const CreateTicket: React.FC = () => {
                       required
                     />
                   </div>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-gray-500 mt-3">
                     Upload a photo of the issue (Max 10MB)
                   </p>
                 </div>
@@ -387,19 +429,21 @@ const CreateTicket: React.FC = () => {
 
           {/* Submit Button */}
           <div className="flex justify-end space-x-4">
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/tickets')}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 font-semibold transition-all duration-300"
             >
               Cancel
-            </button>
+            </motion.button>
             <motion.button
               type="submit"
-              disabled={isSubmitting || isCheckingDuplicates || isCreatingDuplicate}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={isSubmitting || isCheckingDuplicates || isCreatingDuplicate || isBlacklisted}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
             >
               {isCheckingDuplicates ? (
                 <div className="flex items-center space-x-2">

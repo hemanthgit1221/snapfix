@@ -12,7 +12,9 @@ import {
   ExclamationTriangleIcon,
   TicketIcon,
   MagnifyingGlassIcon,
-  MapPinIcon
+  MapPinIcon,
+  FlagIcon,
+  ShieldExclamationIcon
 } from '@heroicons/react/24/outline';
 
 const AdminTickets: React.FC = () => {
@@ -91,21 +93,21 @@ const AdminTickets: React.FC = () => {
     const statusStr = typeof status === 'string' ? status : status;
     switch (statusStr) {
       case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30';
       case 'IN_PROGRESS':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-lg shadow-blue-500/30';
       case 'AT_SITE':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-gradient-to-r from-purple-400 to-pink-500 text-white shadow-lg shadow-purple-500/30';
       case 'WAITING_FOR_MATERIAL':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-gradient-to-r from-orange-400 to-red-500 text-white shadow-lg shadow-orange-500/30';
       case 'RESOLVED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-500/30';
       case 'CLOSED':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
       case 'REJECTED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-lg shadow-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
     }
   };
 
@@ -134,15 +136,15 @@ const AdminTickets: React.FC = () => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'URGENT':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-lg shadow-red-500/30';
       case 'HIGH':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30';
       case 'MEDIUM':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg shadow-yellow-500/30';
       case 'LOW':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg shadow-green-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
     }
   };
 
@@ -157,15 +159,21 @@ const AdminTickets: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900 font-poppins">Tickets</h1>
-          <p className="text-gray-600 mt-2">View and manage all tickets in the system</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
+        >
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold font-poppins">Tickets</h1>
+            <p className="text-blue-100 mt-2">View and manage all tickets in the system</p>
+          </div>
+        </motion.div>
         
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+              <div key={i} className="h-32 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -179,16 +187,22 @@ const AdminTickets: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
       >
-        <div className="flex justify-between items-center">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+        <div className="relative z-10 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 font-poppins">Tickets</h1>
-            <p className="text-gray-600 mt-2">View and manage all tickets in the system</p>
+            <h1 className="text-3xl font-bold font-poppins">Tickets</h1>
+            <p className="text-blue-100 mt-2">View and manage all tickets in the system</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-500">Total Tickets</p>
-            <p className="text-2xl font-bold text-primary-600">{tickets.length}</p>
+            <p className="text-sm text-blue-100">Total Tickets</p>
+            <p className="text-3xl font-bold">{tickets.length}</p>
           </div>
         </div>
       </motion.div>
@@ -198,7 +212,7 @@ const AdminTickets: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20"
       >
         {/* Search Bar */}
         <div className="mb-6">
@@ -209,7 +223,7 @@ const AdminTickets: React.FC = () => {
               placeholder="Search tickets by ID, room number, description, or user..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
             />
           </div>
         </div>
@@ -217,24 +231,26 @@ const AdminTickets: React.FC = () => {
         {/* Filter Tabs */}
         <div className="flex flex-wrap gap-2">
           {filterTabs.map((tab) => (
-            <button
+            <motion.button
               key={tab.key}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setFilter(tab.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 filter === tab.key
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30'
+                  : 'bg-white/60 text-gray-700 hover:bg-white/80 hover:shadow-md border border-gray-200'
               }`}
             >
               {tab.label}
               <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
                 filter === tab.key
-                  ? 'bg-primary-500 text-white'
+                  ? 'bg-white/30 text-white'
                   : 'bg-gray-200 text-gray-600'
               }`}>
                 {tab.count}
               </span>
-            </button>
+            </motion.button>
           ))}
         </div>
       </motion.div>
@@ -247,17 +263,27 @@ const AdminTickets: React.FC = () => {
         className="space-y-4"
       >
         {filteredTickets.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+          <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-12 text-center border border-white/20">
             <TicketIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
               {searchTerm || filter !== 'ALL' ? 'No tickets found' : 'No tickets available'}
             </h3>
-            <p className="text-gray-500">
+            <p className="text-gray-600 mb-4">
               {searchTerm || filter !== 'ALL' 
                 ? 'Try adjusting your search or filter criteria.'
                 : 'There are no tickets in the system yet.'
               }
             </p>
+            {!(searchTerm || filter !== 'ALL') && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/tickets/create')}
+                className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Create First Ticket
+              </motion.button>
+            )}
           </div>
         ) : (
           filteredTickets.map((ticket, index) => (
@@ -266,7 +292,14 @@ const AdminTickets: React.FC = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow"
+              whileHover={{ scale: 1.01, y: -4 }}
+              className={`bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border transition-all duration-300 ${
+                ticket.userIsFlagged 
+                  ? 'border-amber-300 bg-amber-50/50' 
+                  : ticket.userIsBlacklisted 
+                  ? 'border-red-300 bg-red-50/50' 
+                  : 'border-white/20'
+              }`}
             >
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex items-start space-x-4">
@@ -281,7 +314,7 @@ const AdminTickets: React.FC = () => {
 
                   {/* Ticket Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-3 mb-2">
+                    <div className="flex items-center space-x-3 mb-2 flex-wrap">
                       <h3 className="text-lg font-semibold text-gray-900">
                         {ticket.ticketId}
                       </h3>
@@ -295,6 +328,18 @@ const AdminTickets: React.FC = () => {
                       {ticket.isDuplicate && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                           ⚠️ Possible Duplicate
+                        </span>
+                      )}
+                      {ticket.userIsFlagged && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-300">
+                          <FlagIcon className="h-3 w-3 mr-1" />
+                          Flagged User
+                        </span>
+                      )}
+                      {ticket.userIsBlacklisted && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-300">
+                          <ShieldExclamationIcon className="h-3 w-3 mr-1" />
+                          Blacklisted
                         </span>
                       )}
                     </div>
@@ -331,13 +376,15 @@ const AdminTickets: React.FC = () => {
 
                 {/* Actions */}
                 <div className="flex items-center space-x-3">
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => navigate(`/tickets/${ticket.ticketId}`, { state: { fromAdmin: true } })}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 w-40 justify-center"
                   >
                     <EyeIcon className="h-4 w-4" />
                     View Details
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </motion.div>

@@ -159,13 +159,13 @@ const StaffManagement: React.FC = () => {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'ADMIN':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-lg shadow-red-500/30';
       case 'DEPARTMENT_HEAD':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30';
       case 'STAFF':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
     }
   };
 
@@ -185,15 +185,21 @@ const StaffManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900 font-poppins">Staff Management</h1>
-          <p className="text-gray-600 mt-2">Manage staff members and their roles</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
+        >
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold font-poppins">Staff Management</h1>
+            <p className="text-blue-100 mt-2">Manage staff members and their roles</p>
+          </div>
+        </motion.div>
         
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 bg-gray-200 rounded-lg"></div>
+              <div key={i} className="h-20 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -207,20 +213,28 @@ const StaffManagement: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
       >
-        <div className="flex justify-between items-center">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+        <div className="relative z-10 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 font-poppins">Staff Management</h1>
-            <p className="text-gray-600 mt-2">Manage staff members and their roles</p>
+            <h1 className="text-3xl font-bold font-poppins">Staff Management</h1>
+            <p className="text-blue-100 mt-2">Manage staff members and their roles</p>
           </div>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setShowAddModal(true)}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+            className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 transition-all duration-300 shadow-lg font-semibold flex items-center gap-2"
           >
             <PlusIcon className="h-5 w-5" />
             Add Staff Member
-          </button>
+          </motion.button>
         </div>
       </motion.div>
 
@@ -229,7 +243,7 @@ const StaffManagement: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20"
       >
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
@@ -239,47 +253,51 @@ const StaffManagement: React.FC = () => {
                 placeholder="Search staff members..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
               />
-              <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
             </div>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {['ALL', 'ADMIN', 'DEPARTMENT_HEAD', 'STAFF'].map((role) => (
-              <button
+              <motion.button
                 key={role}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setFilterRole(role)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   filterRole === role
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30'
+                    : 'bg-white/60 text-gray-700 hover:bg-white/80 hover:shadow-md border border-gray-200'
                 }`}
               >
                 {role === 'ALL' ? 'All Roles' : role.replace('_', ' ')}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
       </motion.div>
 
       {/* Staff List */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
+      <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20">
         <div className="space-y-4">
           {filteredStaff.length === 0 ? (
             <div className="text-center py-12">
-              <UserIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No staff members found</h3>
-              <p className="text-gray-500 mb-4">
+              <UserIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No staff members found</h3>
+              <p className="text-gray-600 mb-6">
                 {searchTerm || filterRole !== 'ALL' ? 'Try adjusting your search criteria' : 'No staff members have been added yet'}
               </p>
               {!searchTerm && filterRole === 'ALL' && (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setShowAddModal(true)}
-                  className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
                 >
                   Add Your First Staff Member
-                </button>
+                </motion.button>
               )}
             </div>
           ) : (
@@ -289,7 +307,8 @@ const StaffManagement: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                whileHover={{ scale: 1.02, y: -2 }}
+                className="flex items-center justify-between p-5 border-2 border-gray-200 rounded-xl hover:border-indigo-300 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/50 transition-all duration-300 bg-white/60 backdrop-blur-sm"
               >
                 <div className="flex items-center space-x-4">
                   <div className="h-12 w-12 bg-primary-100 rounded-full flex items-center justify-center">
@@ -306,8 +325,8 @@ const StaffManagement: React.FC = () => {
                         {getRoleIcon(member.role)}
                         <span className="ml-1">{member.role.replace('_', ' ')}</span>
                       </span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        member.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        member.isActive ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-md' : 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md'
                       }`}>
                         {member.isActive ? 'Active' : 'Inactive'}
                       </span>
@@ -319,20 +338,24 @@ const StaffManagement: React.FC = () => {
                 </div>
                 
                 <div className="flex gap-2">
-                  <button 
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={() => handleEditStaff(member)}
-                    className="p-2 text-gray-400 hover:text-primary-600 transition-colors"
+                    className="p-2.5 bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 hover:from-indigo-200 hover:to-purple-200 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
                     title="Edit staff member"
                   >
-                    <PencilIcon className="h-4 w-4" />
-                  </button>
-                  <button 
+                    <PencilIcon className="h-5 w-5" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={() => handleDeleteStaff(member.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                    className="p-2.5 bg-gradient-to-br from-red-100 to-pink-100 text-red-600 hover:from-red-200 hover:to-pink-200 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
                     title="Delete staff member"
                   >
-                    <TrashIcon className="h-4 w-4" />
-                  </button>
+                    <TrashIcon className="h-5 w-5" />
+                  </motion.button>
                 </div>
               </motion.div>
             ))
@@ -342,31 +365,31 @@ const StaffManagement: React.FC = () => {
 
       {/* Add Staff Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4"
+            className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-full max-w-md border border-white/20"
           >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Add New Staff Member</h2>
-            <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Add New Staff Member</h2>
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
                 <input
                   type="text"
                   value={newStaff.name}
                   onChange={(e) => setNewStaff({...newStaff, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
                   placeholder="Enter full name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                 <input
                   type="email"
                   value={newStaff.email}
                   onChange={(e) => setNewStaff({...newStaff, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
                   placeholder="Enter email address"
                 />
               </div>
@@ -375,7 +398,7 @@ const StaffManagement: React.FC = () => {
                 <select 
                   value={newStaff.role}
                   onChange={(e) => setNewStaff({...newStaff, role: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white/50 backdrop-blur-sm"
                 >
                   <option value="STAFF">Staff</option>
                   <option value="DEPARTMENT_HEAD">Department Head</option>
@@ -392,19 +415,23 @@ const StaffManagement: React.FC = () => {
               </div>
             </div>
             <div className="flex gap-3 mt-6">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setShowAddModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 font-semibold transition-all duration-300"
               >
                 Cancel
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: addingStaff ? 1 : 1.05 }}
+                whileTap={{ scale: addingStaff ? 1 : 0.95 }}
                 onClick={handleAddStaff}
                 disabled={addingStaff}
-                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl font-semibold"
               >
                 {addingStaff ? 'Adding...' : 'Add Staff Member'}
-              </button>
+              </motion.button>
             </div>
           </motion.div>
         </div>
@@ -412,12 +439,12 @@ const StaffManagement: React.FC = () => {
 
       {/* Edit Staff Modal */}
       {showEditModal && editingStaff && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
+            className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-md border border-white/20"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">

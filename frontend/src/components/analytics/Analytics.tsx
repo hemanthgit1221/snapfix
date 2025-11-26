@@ -72,15 +72,21 @@ const Analytics: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900 font-poppins">Analytics</h1>
-          <p className="text-gray-600 mt-2">View ticket trends and performance metrics</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
+        >
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold font-poppins">Analytics Dashboard</h1>
+            <p className="text-blue-100 mt-2">View ticket trends and performance metrics</p>
+          </div>
+        </motion.div>
         
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-64 bg-gray-200 rounded-lg"></div>
+              <div key={i} className="h-64 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -94,28 +100,38 @@ const Analytics: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
       >
-        <div className="flex justify-between items-center">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+        <div className="relative z-10 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 font-poppins">Analytics Dashboard</h1>
-            <p className="text-gray-600 mt-2">View ticket trends and performance metrics</p>
+            <h1 className="text-3xl font-bold font-poppins">Analytics Dashboard</h1>
+            <p className="text-blue-100 mt-2">View ticket trends and performance metrics</p>
           </div>
           <div className="flex items-center gap-3">
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-2.5 border-2 border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/50 bg-white/20 backdrop-blur-sm text-white font-semibold"
             >
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="90d">Last 90 days</option>
-              <option value="1y">Last year</option>
+              <option value="7d" className="text-gray-900">Last 7 days</option>
+              <option value="30d" className="text-gray-900">Last 30 days</option>
+              <option value="90d" className="text-gray-900">Last 90 days</option>
+              <option value="1y" className="text-gray-900">Last year</option>
             </select>
-            <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 shadow-lg font-semibold"
+            >
               <CalendarIcon className="h-5 w-5" />
               Export
-            </button>
+            </motion.button>
           </div>
         </div>
       </motion.div>
@@ -126,15 +142,17 @@ const Analytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Tickets</p>
+              <p className="text-sm font-semibold text-gray-600 mb-1">Total Tickets</p>
               <p className="text-2xl font-bold text-gray-900">156</p>
             </div>
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <ChartBarIcon className="h-6 w-6 text-blue-600" />
+            <div className="p-3 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/30">
+              <ChartBarIcon className="h-6 w-6 text-white" />
             </div>
           </div>
         </motion.div>
@@ -143,15 +161,17 @@ const Analytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Avg Resolution Time</p>
+              <p className="text-sm font-semibold text-gray-600 mb-1">Avg Resolution Time</p>
               <p className="text-2xl font-bold text-gray-900">{analyticsData.averageResolutionTime} days</p>
             </div>
-            <div className="p-3 bg-green-50 rounded-lg">
-              <ClockIcon className="h-6 w-6 text-green-600" />
+            <div className="p-3 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl shadow-lg shadow-emerald-500/30">
+              <ClockIcon className="h-6 w-6 text-white" />
             </div>
           </div>
         </motion.div>
@@ -160,15 +180,17 @@ const Analytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Resolution Rate</p>
+              <p className="text-sm font-semibold text-gray-600 mb-1">Resolution Rate</p>
               <p className="text-2xl font-bold text-gray-900">78%</p>
             </div>
-            <div className="p-3 bg-purple-50 rounded-lg">
-              <CheckCircleIcon className="h-6 w-6 text-purple-600" />
+            <div className="p-3 bg-gradient-to-br from-purple-400 to-pink-600 rounded-xl shadow-lg shadow-purple-500/30">
+              <CheckCircleIcon className="h-6 w-6 text-white" />
             </div>
           </div>
         </motion.div>
@@ -177,15 +199,17 @@ const Analytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Active Staff</p>
+              <p className="text-sm font-semibold text-gray-600 mb-1">Active Staff</p>
               <p className="text-2xl font-bold text-gray-900">8</p>
             </div>
-            <div className="p-3 bg-orange-50 rounded-lg">
-              <UserGroupIcon className="h-6 w-6 text-orange-600" />
+            <div className="p-3 bg-gradient-to-br from-orange-400 to-red-600 rounded-xl shadow-lg shadow-orange-500/30">
+              <UserGroupIcon className="h-6 w-6 text-white" />
             </div>
           </div>
         </motion.div>
@@ -198,7 +222,7 @@ const Analytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20"
         >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Tickets by Category</h2>
           <div className="space-y-4">
@@ -229,7 +253,7 @@ const Analytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20"
         >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Tickets by Status</h2>
           <div className="space-y-4">
@@ -263,7 +287,7 @@ const Analytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20"
         >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Trends</h2>
           <div className="space-y-3">
@@ -289,7 +313,7 @@ const Analytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20"
         >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Performers</h2>
           <div className="space-y-4">

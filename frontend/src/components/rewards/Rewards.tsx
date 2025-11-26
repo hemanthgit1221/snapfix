@@ -87,13 +87,13 @@ const Rewards: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-500/30';
       case 'USED':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-lg shadow-blue-500/30';
       case 'EXPIRED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-lg shadow-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
     }
   };
 
@@ -124,9 +124,15 @@ const Rewards: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-xl shadow-sm p-6 text-white"
+        className="relative bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-3xl shadow-xl p-8 overflow-hidden text-white"
       >
-        <div className="flex justify-between items-center">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+        <div className="relative z-10 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold font-poppins">🎁 Voucher Center</h1>
             <p className="mt-2 opacity-90">Redeem your points for amazing rewards</p>
@@ -144,27 +150,31 @@ const Rewards: React.FC = () => {
       </motion.div>
 
       {/* Tabs */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-        <button
+      <div className="flex space-x-2 bg-white/80 backdrop-blur-md p-1 rounded-xl shadow-lg border border-white/20">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setActiveTab('available')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+          className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
             activeTab === 'available'
-              ? 'bg-white text-purple-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
         >
           Available Vouchers ({availableVouchers.length})
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setActiveTab('redeemed')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+          className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
             activeTab === 'redeemed'
-              ? 'bg-white text-purple-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
         >
           My Vouchers ({redeemedVouchers.length})
-        </button>
+        </motion.button>
       </div>
 
       {/* Available Vouchers */}
@@ -175,12 +185,13 @@ const Rewards: React.FC = () => {
               key={voucher.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl transition-all duration-300"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <GiftIcon className="h-6 w-6 text-purple-600" />
+                  <div className="p-3 bg-gradient-to-br from-purple-400 to-pink-600 rounded-xl shadow-lg shadow-purple-500/30">
+                    <GiftIcon className="h-6 w-6 text-white" />
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-gray-900">{voucher.pointsRequired}</p>
@@ -192,23 +203,25 @@ const Rewards: React.FC = () => {
                 <p className="text-gray-600 text-sm mb-4">{voucher.description}</p>
 
                 <div className="flex items-center justify-between mb-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-purple-400 to-pink-500 text-white shadow-md">
                     {voucher.discount}
                   </span>
                   <span className="text-sm text-gray-500">{voucher.category}</span>
                 </div>
 
-                <button
+                <motion.button
+                  whileHover={{ scale: canRedeemVoucher(voucher) ? 1.05 : 1 }}
+                  whileTap={{ scale: canRedeemVoucher(voucher) ? 0.95 : 1 }}
                   onClick={() => handleRedeemVoucher(voucher)}
                   disabled={!canRedeemVoucher(voucher)}
-                  className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+                  className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 ${
                     canRedeemVoucher(voucher)
-                      ? 'bg-purple-600 text-white hover:bg-purple-700'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white hover:from-purple-600 hover:to-pink-700 shadow-lg hover:shadow-xl'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
                   {canRedeemVoucher(voucher) ? 'Redeem Now' : 'Insufficient Points'}
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           ))}
@@ -231,12 +244,13 @@ const Rewards: React.FC = () => {
               key={redemption.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl transition-all duration-300"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <TrophyIcon className="h-6 w-6 text-green-600" />
+                  <div className="p-3 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl shadow-lg shadow-emerald-500/30">
+                    <TrophyIcon className="h-6 w-6 text-white" />
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(redemption.status)}`}>
                     {getStatusText(redemption.status)}
@@ -255,13 +269,15 @@ const Rewards: React.FC = () => {
                   <span className="text-sm font-medium text-gray-900">{redemption.pointsUsed} pts</span>
                 </div>
 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => handleViewRedeemedVoucher(redemption)}
-                  className="w-full py-2 px-4 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
+                  className="w-full py-3 px-4 rounded-xl font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
                 >
                   <EyeIcon className="h-4 w-4" />
                   <span>View Details</span>
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           ))}

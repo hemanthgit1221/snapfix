@@ -49,6 +49,18 @@ public class User implements UserDetails {
     @Column(name = "supabase_user_id")
     private String supabaseUserId;
     
+    @Column(name = "is_flagged")
+    private Boolean isFlagged = false;
+    
+    @Column(name = "is_blacklisted")
+    private Boolean isBlacklisted = false;
+    
+    @Column(name = "flagged_at")
+    private LocalDateTime flaggedAt;
+    
+    @Column(name = "blacklisted_at")
+    private LocalDateTime blacklistedAt;
+    
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -153,6 +165,38 @@ public class User implements UserDetails {
     
     public void setRewards(List<Reward> rewards) {
         this.rewards = rewards;
+    }
+    
+    public Boolean getIsFlagged() {
+        return isFlagged;
+    }
+    
+    public void setIsFlagged(Boolean isFlagged) {
+        this.isFlagged = isFlagged;
+    }
+    
+    public Boolean getIsBlacklisted() {
+        return isBlacklisted;
+    }
+    
+    public void setIsBlacklisted(Boolean isBlacklisted) {
+        this.isBlacklisted = isBlacklisted;
+    }
+    
+    public LocalDateTime getFlaggedAt() {
+        return flaggedAt;
+    }
+    
+    public void setFlaggedAt(LocalDateTime flaggedAt) {
+        this.flaggedAt = flaggedAt;
+    }
+    
+    public LocalDateTime getBlacklistedAt() {
+        return blacklistedAt;
+    }
+    
+    public void setBlacklistedAt(LocalDateTime blacklistedAt) {
+        this.blacklistedAt = blacklistedAt;
     }
     
     // UserDetails implementation

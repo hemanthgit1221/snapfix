@@ -50,85 +50,91 @@ const AdminDashboard: React.FC = () => {
       name: 'Total Tickets',
       value: stats.totalTickets,
       icon: TicketIcon,
-      color: 'bg-blue-500',
-      textColor: 'text-blue-600',
-      bgColor: 'bg-blue-50'
+      gradient: 'from-sky-400 via-blue-500 to-indigo-600',
+      iconBg: 'bg-gradient-to-br from-sky-400 to-blue-600',
+      shadow: 'shadow-blue-500/20',
+      glow: 'shadow-blue-500/30'
     },
     {
       name: 'Pending',
       value: stats.pendingTickets,
       icon: ClockIcon,
-      color: 'bg-yellow-500',
-      textColor: 'text-yellow-600',
-      bgColor: 'bg-yellow-50'
+      gradient: 'from-amber-400 via-orange-500 to-pink-500',
+      iconBg: 'bg-gradient-to-br from-amber-400 to-orange-600',
+      shadow: 'shadow-orange-500/20',
+      glow: 'shadow-orange-500/30'
     },
     {
       name: 'In Progress',
       value: stats.inProgressTickets,
       icon: ExclamationTriangleIcon,
-      color: 'bg-orange-500',
-      textColor: 'text-orange-600',
-      bgColor: 'bg-orange-50'
+      gradient: 'from-blue-400 via-indigo-500 to-purple-600',
+      iconBg: 'bg-gradient-to-br from-blue-400 to-indigo-600',
+      shadow: 'shadow-indigo-500/20',
+      glow: 'shadow-indigo-500/30'
     },
     {
       name: 'Resolved',
       value: stats.resolvedTickets,
       icon: CheckCircleIcon,
-      color: 'bg-green-500',
-      textColor: 'text-green-600',
-      bgColor: 'bg-green-50'
+      gradient: 'from-emerald-400 via-teal-500 to-cyan-600',
+      iconBg: 'bg-gradient-to-br from-emerald-400 to-teal-600',
+      shadow: 'shadow-emerald-500/20',
+      glow: 'shadow-emerald-500/30'
     },
     {
       name: 'Total Users',
       value: stats.totalUsers,
       icon: UserGroupIcon,
-      color: 'bg-purple-500',
-      textColor: 'text-purple-600',
-      bgColor: 'bg-purple-50'
+      gradient: 'from-purple-400 via-pink-500 to-rose-600',
+      iconBg: 'bg-gradient-to-br from-purple-400 to-pink-600',
+      shadow: 'shadow-purple-500/20',
+      glow: 'shadow-purple-500/30'
     },
     {
       name: 'Active Staff',
       value: stats.activeStaff,
       icon: UserPlusIcon,
-      color: 'bg-indigo-500',
-      textColor: 'text-indigo-600',
-      bgColor: 'bg-indigo-50'
+      gradient: 'from-indigo-400 via-purple-500 to-pink-600',
+      iconBg: 'bg-gradient-to-br from-indigo-400 to-purple-600',
+      shadow: 'shadow-indigo-500/20',
+      glow: 'shadow-indigo-500/30'
     }
   ];
 
   const getStatusColor = (status: TicketStatus) => {
     switch (status) {
       case TicketStatus.PENDING:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30';
       case TicketStatus.IN_PROGRESS:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-lg shadow-blue-500/30';
       case TicketStatus.AT_SITE:
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-gradient-to-r from-purple-400 to-pink-500 text-white shadow-lg shadow-purple-500/30';
       case TicketStatus.WAITING_FOR_MATERIAL:
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-gradient-to-r from-orange-400 to-red-500 text-white shadow-lg shadow-orange-500/30';
       case TicketStatus.RESOLVED:
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-500/30';
       case TicketStatus.CLOSED:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
       case TicketStatus.REJECTED:
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-lg shadow-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'URGENT':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-lg shadow-red-500/30';
       case 'HIGH':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30';
       case 'MEDIUM':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg shadow-yellow-500/30';
       case 'LOW':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg shadow-green-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
     }
   };
 
@@ -222,15 +228,21 @@ const AdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900 font-poppins">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Manage tickets, assignments, and analytics</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
+        >
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold font-poppins">Admin Dashboard</h1>
+            <p className="text-blue-100 mt-2">Manage tickets, assignments, and analytics</p>
+          </div>
+        </motion.div>
         
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="h-24 bg-gray-200 rounded-lg"></div>
+              <div key={i} className="h-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -244,28 +256,38 @@ const AdminDashboard: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
       >
-        <div className="flex justify-between items-center">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+        <div className="relative z-10 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 font-poppins">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-2">Manage tickets, assignments, and analytics</p>
+            <h1 className="text-3xl font-bold font-poppins">Admin Dashboard</h1>
+            <p className="text-blue-100 mt-2">Manage tickets, assignments, and analytics</p>
           </div>
           <div className="flex gap-3">
-            <button 
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/analytics')}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              className="flex items-center gap-2 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 shadow-lg font-semibold"
             >
               <ChartBarIcon className="h-5 w-5" />
               Analytics
-            </button>
-            <button 
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/admin/settings')}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-2 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 shadow-lg font-semibold"
             >
               <CogIcon className="h-5 w-5" />
               Settings
-            </button>
+            </motion.button>
           </div>
         </div>
       </motion.div>
@@ -278,17 +300,17 @@ const AdminDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-xl shadow-sm p-4 card-hover h-24 flex items-center"
+            whileHover={{ scale: 1.05, y: -4 }}
+            className={`relative bg-white/80 backdrop-blur-md rounded-2xl shadow-md p-4 border border-white/20 overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 group`}
           >
-            <div className="flex items-center justify-between w-full">
-              <div className="flex-1">
-                <p className="text-xs font-medium text-gray-600 font-inter mb-1">{stat.name}</p>
-                <p className={`text-xl font-bold ${stat.textColor} font-poppins`}>
-                  {stat.value}
-                </p>
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+            <div className="relative z-10 flex flex-col items-center text-center gap-2">
+              <div className={`p-2.5 rounded-2xl ${stat.iconBg} shadow-lg ${stat.glow}`}>
+                <stat.icon className="h-5 w-5 text-white" />
               </div>
-              <div className={`p-2 rounded-lg ${stat.bgColor} ml-2`}>
-                <stat.icon className={`h-5 w-5 ${stat.textColor}`} />
+              <div className="space-y-1">
+                <p className="text-[12px] font-semibold text-gray-600 uppercase tracking-[0.2em] leading-tight">{stat.name}</p>
+                <p className="text-xl font-bold text-gray-900 font-poppins leading-tight">{stat.value}</p>
               </div>
             </div>
           </motion.div>
@@ -416,22 +438,23 @@ const AdminDashboard: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="bg-white/85 backdrop-blur-lg rounded-3xl shadow-lg p-6 border border-white/20"
       >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 font-poppins">Tickets</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 font-poppins">Tickets</h2>
           <button 
             onClick={() => navigate('/admin/tickets')}
-            className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+            className="text-indigo-600 hover:text-indigo-700 text-sm font-semibold flex items-center gap-1"
           >
             View All
+            <span aria-hidden="true">→</span>
           </button>
         </div>
         
         <div className="space-y-4">
           {recentTickets.length === 0 ? (
-            <div className="text-center py-8">
-              <TicketIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <div className="text-center py-10">
+              <TicketIcon className="mx-auto h-14 w-14 text-gray-300 mb-4" />
               <p className="text-gray-500">No tickets found</p>
             </div>
           ) : (
@@ -441,35 +464,38 @@ const AdminDashboard: React.FC = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 + index * 0.1 }}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-5 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100"
                 onClick={() => navigate(`/tickets/${ticket.ticketId}`, { state: { fromAdmin: true } })}
               >
                 <div className="flex items-center space-x-4">
-                  <img
-                    src={ticket.photoUrl}
-                    alt="Ticket"
-                    className="w-12 h-12 object-cover rounded-lg"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                  <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center shadow-inner">
+                    <img
+                      src="/images/snapfix-logo.png"
+                      alt="SNAPFIX"
+                      className="h-6 w-auto object-contain"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="text-lg font-semibold text-gray-900 truncate">
                       {ticket.ticketId}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {ticket.roomNumber} • {ticket.user.name}
+                    <p className="text-sm text-gray-600 truncate capitalize">
+                      Room {ticket.roomNumber} • {ticket.user.name}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-end">
                   <div className="flex gap-2">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status as TicketStatus)}`}>
+                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold tracking-wide ${getStatusColor(ticket.status as TicketStatus)}`}>
                       {ticket.status.replace('_', ' ')}
                     </span>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
+                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold tracking-wide ${getPriorityColor(ticket.priority)}`}>
                       {ticket.priority}
                     </span>
                   </div>
-                  <span className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                    View Details →
+                  <span className="text-indigo-600 hover:text-indigo-700 text-sm font-semibold flex items-center gap-1">
+                    View Details
+                    <span aria-hidden="true">→</span>
                   </span>
                 </div>
               </motion.div>

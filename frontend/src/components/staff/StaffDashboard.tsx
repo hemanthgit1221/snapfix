@@ -124,21 +124,21 @@ const StaffDashboard: React.FC = () => {
   const getStatusColor = (status: TicketStatus) => {
     switch (status) {
       case TicketStatus.PENDING:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30';
       case TicketStatus.IN_PROGRESS:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-lg shadow-blue-500/30';
       case TicketStatus.AT_SITE:
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-gradient-to-r from-purple-400 to-pink-500 text-white shadow-lg shadow-purple-500/30';
       case TicketStatus.WAITING_FOR_MATERIAL:
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-gradient-to-r from-orange-400 to-red-500 text-white shadow-lg shadow-orange-500/30';
       case TicketStatus.RESOLVED:
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-500/30';
       case TicketStatus.CLOSED:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
       case TicketStatus.REJECTED:
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-lg shadow-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
     }
   };
 
@@ -166,15 +166,15 @@ const StaffDashboard: React.FC = () => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'URGENT':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-lg shadow-red-500/30';
       case 'HIGH':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30';
       case 'MEDIUM':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg shadow-yellow-500/30';
       case 'LOW':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg shadow-green-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
     }
   };
 
@@ -192,15 +192,21 @@ const StaffDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900 font-poppins">Staff Dashboard</h1>
-          <p className="text-gray-600 mt-2">Manage assigned tickets and updates</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
+        >
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold font-poppins">Staff Dashboard</h1>
+            <p className="text-blue-100 mt-2">Manage assigned tickets and updates</p>
+          </div>
+        </motion.div>
         
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+              <div key={i} className="h-32 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -215,13 +221,17 @@ const StaffDashboard: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
       >
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 font-poppins">Staff Dashboard</h1>
-            <p className="text-gray-600 mt-2">Manage assigned tickets and updates</p>
-          </div>
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold font-poppins">Staff Dashboard</h1>
+          <p className="text-blue-100 mt-2">Manage assigned tickets and updates</p>
         </div>
       </motion.div>
 
@@ -231,15 +241,17 @@ const StaffDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm p-4 card-hover"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-4 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-sky-400 to-blue-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-600">Total</p>
-              <p className="text-lg font-bold text-gray-900 font-poppins">{stats.total}</p>
+              <p className="text-xs font-semibold text-gray-600 mb-1">Total</p>
+              <p className="text-xl font-bold text-gray-900 font-poppins">{stats.total}</p>
             </div>
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <ClipboardDocumentListIcon className="h-4 w-4 text-blue-600" />
+            <div className="p-2.5 bg-gradient-to-br from-sky-400 to-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
+              <ClipboardDocumentListIcon className="h-5 w-5 text-white" />
             </div>
           </div>
         </motion.div>
@@ -248,15 +260,17 @@ const StaffDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm p-4 card-hover"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-4 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-600">Pending</p>
-              <p className="text-lg font-bold text-yellow-600 font-poppins">{stats.pending}</p>
+              <p className="text-xs font-semibold text-gray-600 mb-1">Pending</p>
+              <p className="text-xl font-bold text-gray-900 font-poppins">{stats.pending}</p>
             </div>
-            <div className="p-2 bg-yellow-50 rounded-lg">
-              <ClockIcon className="h-4 w-4 text-yellow-600" />
+            <div className="p-2.5 bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl shadow-lg shadow-orange-500/30">
+              <ClockIcon className="h-5 w-5 text-white" />
             </div>
           </div>
         </motion.div>
@@ -265,15 +279,17 @@ const StaffDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl shadow-sm p-4 card-hover"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-4 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-600">In Progress</p>
-              <p className="text-lg font-bold text-blue-600 font-poppins">{stats.inProgress}</p>
+              <p className="text-xs font-semibold text-gray-600 mb-1">In Progress</p>
+              <p className="text-xl font-bold text-gray-900 font-poppins">{stats.inProgress}</p>
             </div>
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <ExclamationTriangleIcon className="h-4 w-4 text-blue-600" />
+            <div className="p-2.5 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/30">
+              <ExclamationTriangleIcon className="h-5 w-5 text-white" />
             </div>
           </div>
         </motion.div>
@@ -282,15 +298,17 @@ const StaffDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl shadow-sm p-4 card-hover"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-4 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-600">At Site</p>
-              <p className="text-lg font-bold text-purple-600 font-poppins">{stats.atSite}</p>
+              <p className="text-xs font-semibold text-gray-600 mb-1">At Site</p>
+              <p className="text-xl font-bold text-gray-900 font-poppins">{stats.atSite}</p>
             </div>
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <MapPinIcon className="h-4 w-4 text-purple-600" />
+            <div className="p-2.5 bg-gradient-to-br from-purple-400 to-pink-600 rounded-xl shadow-lg shadow-purple-500/30">
+              <MapPinIcon className="h-5 w-5 text-white" />
             </div>
           </div>
         </motion.div>
@@ -299,15 +317,17 @@ const StaffDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white rounded-xl shadow-sm p-4 card-hover"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-4 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-600">Waiting</p>
-              <p className="text-lg font-bold text-orange-600 font-poppins">{stats.waitingForMaterial}</p>
+              <p className="text-xs font-semibold text-gray-600 mb-1">Waiting</p>
+              <p className="text-xl font-bold text-gray-900 font-poppins">{stats.waitingForMaterial}</p>
             </div>
-            <div className="p-2 bg-orange-50 rounded-lg">
-              <TruckIcon className="h-4 w-4 text-orange-600" />
+            <div className="p-2.5 bg-gradient-to-br from-orange-400 to-red-600 rounded-xl shadow-lg shadow-orange-500/30">
+              <TruckIcon className="h-5 w-5 text-white" />
             </div>
           </div>
         </motion.div>
@@ -316,15 +336,17 @@ const StaffDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white rounded-xl shadow-sm p-4 card-hover"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-4 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-600">Resolved</p>
-              <p className="text-lg font-bold text-green-600 font-poppins">{stats.resolved}</p>
+              <p className="text-xs font-semibold text-gray-600 mb-1">Resolved</p>
+              <p className="text-xl font-bold text-gray-900 font-poppins">{stats.resolved}</p>
             </div>
-            <div className="p-2 bg-green-50 rounded-lg">
-              <CheckCircleIcon className="h-4 w-4 text-green-600" />
+            <div className="p-2.5 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl shadow-lg shadow-emerald-500/30">
+              <CheckCircleIcon className="h-5 w-5 text-white" />
             </div>
           </div>
         </motion.div>

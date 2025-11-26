@@ -31,6 +31,10 @@ public class TicketResponse {
     private String parentTicketId;
     private List<TicketResponse> duplicateTickets;
     
+    // User flag and blacklist status
+    private Boolean userIsFlagged;
+    private Boolean userIsBlacklisted;
+    
     // Constructors
     public TicketResponse() {}
     
@@ -185,5 +189,21 @@ public class TicketResponse {
     
     public void setDuplicateTickets(List<TicketResponse> duplicateTickets) {
         this.duplicateTickets = duplicateTickets;
+    }
+    
+    public Boolean getUserIsFlagged() {
+        return userIsFlagged;
+    }
+    
+    public void setUserIsFlagged(Boolean userIsFlagged) {
+        this.userIsFlagged = userIsFlagged;
+    }
+    
+    public Boolean getUserIsBlacklisted() {
+        return userIsBlacklisted;
+    }
+    
+    public void setUserIsBlacklisted(Boolean userIsBlacklisted) {
+        this.userIsBlacklisted = userIsBlacklisted;
     }
 }

@@ -17,9 +17,11 @@ import {
 import { Ticket, TicketComment, TicketStatus } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { dashboardApi } from '../../services/api';
+import { userManagementService } from '../../services/userManagementService';
 import { formatRelativeTime, formatDateOnly } from '../../utils/dateUtils';
 import StatusUpdateModal from '../staff/StatusUpdateModal';
 import ImageViewerModal from '../common/ImageViewerModal';
+import { FlagIcon } from '@heroicons/react/24/outline';
 
 const TicketDetails: React.FC = () => {
   const { ticketId } = useParams<{ ticketId: string }>();
@@ -62,6 +64,9 @@ const TicketDetails: React.FC = () => {
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState('');
   const [selectedImageTitle, setSelectedImageTitle] = useState('');
+  const [isFlagging, setIsFlagging] = useState(false);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [showFlagOnRejectModal, setShowFlagOnRejectModal] = useState(false);
 
   useEffect(() => {
     const fetchTicketDetails = async () => {
@@ -70,7 +75,22 @@ const TicketDetails: React.FC = () => {
       try {
         setLoading(true);
         const response = await dashboardApi.getTicketDetails(ticketId);
-        const ticketData = (response as any);
+        // Handle both wrapped and direct response formats
+        let ticketData = (response as any);
+        // If response has data property, use it
+        if (ticketData?.data) {
+          ticketData = ticketData.data;
+        }
+        // If response has success property, extract data
+        if (ticketData?.success && ticketData?.data) {
+          ticketData = ticketData.data;
+        }
+        console.log('🔍 Ticket data received:', ticketData);
+        console.log('🔍 Ticket user:', ticketData?.user);
+        console.log('🔍 Ticket userIsFlagged:', ticketData?.userIsFlagged);
+        console.log('🔍 Ticket userIsBlacklisted:', ticketData?.userIsBlacklisted);
+        console.log('🔍 Full response:', response);
+        console.log('🔍 isReviewMode:', isReviewMode);
         setTicket(ticketData);
         
         // Fetch comments for this ticket
@@ -132,8 +152,30 @@ const TicketDetails: React.FC = () => {
   const handleRejectTicket = async () => {
     if (!ticket || !ticketId) return;
     
+    // Always show flag confirmation when rejecting
+    setShowFlagOnRejectModal(true);
+  };
+
+  const performReject = async (shouldFlag: boolean) => {
+    if (!ticket || !ticketId) return;
+    
     try {
       setUpdatingStatus(true);
+      setShowFlagOnRejectModal(false);
+      setShowRejectConfirm(false);
+      
+      // Flag user if requested
+      if (shouldFlag && !ticket.userIsFlagged) {
+        try {
+          const userId = ticket.user?.id || (ticket as any).userId;
+          if (userId) {
+            await userManagementService.flagUser(userId);
+          }
+        } catch (error) {
+          console.error('Failed to flag user:', error);
+        }
+      }
+      
       await dashboardApi.updateTicketStatus(ticket.id, TicketStatus.REJECTED);
       
       // Refresh ticket data
@@ -141,13 +183,75 @@ const TicketDetails: React.FC = () => {
       const updatedTicket = (response as any);
       setTicket(updatedTicket);
       
-      console.log('Ticket rejected');
+      // If user was flagged, they're now blacklisted
+      if (ticket.userIsFlagged || shouldFlag) {
+        alert('Ticket rejected. User has been moved to blacklist.');
+      } else {
+        console.log('Ticket rejected');
+      }
+      
       // Navigate back to admin dashboard
       navigate('/admin');
     } catch (error) {
       console.error('Failed to reject ticket:', error);
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handleFlagUser = async () => {
+    if (!ticket) return;
+    const userId = ticket.user?.id || (ticket as any).userId;
+    if (!userId) {
+      console.error('User ID not found in ticket');
+      alert('Unable to flag user: User information not available');
+      return;
+    }
+    
+    try {
+      setIsFlagging(true);
+      await userManagementService.flagUser(userId);
+      
+      // Refresh ticket data
+      const response = await dashboardApi.getTicketDetails(ticketId!);
+      const updatedTicket = (response as any);
+      setTicket(updatedTicket);
+      
+      console.log('User flagged successfully');
+      alert('User flagged successfully');
+    } catch (error) {
+      console.error('Failed to flag user:', error);
+      alert('Failed to flag user. Please try again.');
+    } finally {
+      setIsFlagging(false);
+    }
+  };
+
+  const handleUnflagUser = async () => {
+    if (!ticket) return;
+    const userId = ticket.user?.id || (ticket as any).userId;
+    if (!userId) {
+      console.error('User ID not found in ticket');
+      alert('Unable to unflag user: User information not available');
+      return;
+    }
+    
+    try {
+      setIsFlagging(true);
+      await userManagementService.unflagUser(userId);
+      
+      // Refresh ticket data
+      const response = await dashboardApi.getTicketDetails(ticketId!);
+      const updatedTicket = (response as any);
+      setTicket(updatedTicket);
+      
+      console.log('User unflagged successfully');
+      alert('User unflagged successfully');
+    } catch (error) {
+      console.error('Failed to unflag user:', error);
+      alert('Failed to unflag user. Please try again.');
+    } finally {
+      setIsFlagging(false);
     }
   };
 
@@ -206,21 +310,21 @@ const TicketDetails: React.FC = () => {
   const getStatusColor = (status: TicketStatus) => {
     switch (status) {
       case TicketStatus.PENDING:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30';
       case TicketStatus.IN_PROGRESS:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-lg shadow-blue-500/30';
       case TicketStatus.AT_SITE:
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-gradient-to-r from-purple-400 to-pink-500 text-white shadow-lg shadow-purple-500/30';
       case TicketStatus.WAITING_FOR_MATERIAL:
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-gradient-to-r from-orange-400 to-red-500 text-white shadow-lg shadow-orange-500/30';
       case TicketStatus.RESOLVED:
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-500/30';
       case TicketStatus.CLOSED:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
       case TicketStatus.REJECTED:
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-lg shadow-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
     }
   };
 
@@ -248,31 +352,35 @@ const TicketDetails: React.FC = () => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'URGENT':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-lg shadow-red-500/30';
       case 'HIGH':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30';
       case 'MEDIUM':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg shadow-yellow-500/30';
       case 'LOW':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg shadow-green-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/30';
     }
   };
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
+        >
+          <div className="relative z-10 animate-pulse">
+            <div className="h-8 bg-white/20 rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-white/20 rounded w-1/2"></div>
           </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        </motion.div>
+        <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+              <div key={i} className="h-32 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -283,13 +391,18 @@ const TicketDetails: React.FC = () => {
   if (!ticket) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 font-poppins">Ticket Not Found</h1>
-          <p className="text-gray-600 mt-2">The requested ticket could not be found.</p>
-          <button
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-12 text-center border border-white/20"
+        >
+          <h1 className="text-3xl font-bold text-gray-900 font-poppins mb-4">Ticket Not Found</h1>
+          <p className="text-gray-600 mb-6">The requested ticket could not be found.</p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => {
               if (returnToReview && originalTicketId) {
-                // Return to the review page of the original ticket with review mode
                 navigate(`/tickets/${originalTicketId}`, { 
                   state: { 
                     reviewMode: true, 
@@ -300,11 +413,11 @@ const TicketDetails: React.FC = () => {
                 navigate(getBackNavigation());
               }
             }}
-            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
           >
             {returnToReview ? 'Back to Review' : 'Back to Tickets'}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     );
   }
@@ -315,13 +428,20 @@ const TicketDetails: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="relative bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
       >
-        <div className="flex items-center justify-between mb-4">
-          <button
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+        <div className="relative z-10 flex items-center justify-between mb-4">
+          <motion.button
+            whileHover={{ scale: 1.05, x: -4 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => {
               if (returnToReview && originalTicketId) {
-                // Return to the review page of the original ticket with review mode
                 navigate(`/tickets/${originalTicketId}`, { 
                   state: { 
                     reviewMode: true, 
@@ -332,11 +452,11 @@ const TicketDetails: React.FC = () => {
                 navigate(getBackNavigation());
               }
             }}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 rounded-xl px-4 py-2 transition-all duration-300 shadow-lg font-semibold"
           >
             <ArrowLeftIcon className="h-5 w-5" />
             <span>{returnToReview ? 'Back to Review' : 'Back to Tickets'}</span>
-          </button>
+          </motion.button>
           
           <div className="flex items-center space-x-3">
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(ticket.status)}`}>
@@ -349,12 +469,12 @@ const TicketDetails: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex items-center justify-between">
+        <div className="relative z-10 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 font-poppins">{ticket.ticketId}</h1>
-            <p className="text-gray-600 mt-1">Created by {ticket.user.name}</p>
+            <h1 className="text-3xl font-bold font-poppins">{ticket.ticketId}</h1>
+            <p className="text-blue-100 mt-1">Created by {ticket.user.name}</p>
           </div>
-          <div className="text-right text-sm text-gray-500">
+          <div className="text-right text-sm text-blue-100">
             <p title={formatDateOnly(ticket.createdAt)}>
               Created: {formatRelativeTime(ticket.createdAt)}
             </p>
@@ -364,6 +484,25 @@ const TicketDetails: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Flagged User Warning Banner */}
+      {ticket.userIsFlagged && (user?.role === 'ADMIN' || user?.role === 'DEPARTMENT_HEAD') && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-4 shadow-lg"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-amber-900 font-poppins">⚠️ WARNING: Flagged User</h3>
+              <p className="text-sm text-amber-800">This ticket was created by a flagged user. It may be false. Please review carefully.</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Review Mode Banner */}
       {isReviewMode && (
@@ -620,17 +759,42 @@ const TicketDetails: React.FC = () => {
                       <button 
                         onClick={handleApproveTicket}
                         disabled={updatingStatus}
-                        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-semibold"
                       >
                         {updatingStatus ? 'Processing...' : '✅ Approve Ticket'}
                       </button>
                       <button 
                         onClick={handleRejectTicket}
                         disabled={updatingStatus}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-semibold"
                       >
                         {updatingStatus ? 'Processing...' : '❌ Reject Ticket'}
                       </button>
+                      
+                      {/* Flag/Unflag User Actions in Review Mode - Always show in review mode */}
+                      {ticket && (
+                        <>
+                          {!ticket.userIsFlagged ? (
+                            <button 
+                              onClick={handleFlagUser}
+                              disabled={isFlagging}
+                              className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg hover:from-amber-600 hover:to-orange-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 font-semibold shadow-lg"
+                            >
+                              <FlagIcon className="h-5 w-5" />
+                              <span>{isFlagging ? 'Flagging...' : '🚩 Flag User'}</span>
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={handleUnflagUser}
+                              disabled={isFlagging}
+                              className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 font-semibold shadow-lg"
+                            >
+                              <FlagIcon className="h-5 w-5" />
+                              <span>{isFlagging ? 'Unflagging...' : '🚩 Unflag User'}</span>
+                            </button>
+                          )}
+                        </>
+                      )}
                     </>
                   )}
                   
@@ -700,6 +864,107 @@ const TicketDetails: React.FC = () => {
         title={selectedImageTitle}
         alt="Ticket Issue Photo"
       />
+
+      {/* Flag on Reject Modal */}
+      {showFlagOnRejectModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full border-2 border-red-200"
+          >
+            <div className="flex items-center space-x-3 mb-4">
+              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+              <h3 className="text-lg font-bold text-gray-900">Reject Ticket & Flag User?</h3>
+            </div>
+            <p className="text-gray-700 mb-4">
+              You are about to reject this ticket. Would you like to flag this user?
+            </p>
+            {ticket?.userIsFlagged && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-amber-800">
+                  <strong>Note:</strong> This user is already flagged. Rejecting will automatically move them to blacklist.
+                </p>
+              </div>
+            )}
+            {!ticket?.userIsFlagged && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Flagging:</strong> If you flag this user and they create another false ticket, they will be automatically blacklisted.
+                </p>
+              </div>
+            )}
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowFlagOnRejectModal(false)}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+              >
+                Cancel
+              </button>
+              {!ticket?.userIsFlagged ? (
+                <>
+                  <button
+                    onClick={() => performReject(false)}
+                    disabled={updatingStatus}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-semibold"
+                  >
+                    {updatingStatus ? 'Processing...' : 'Reject Only'}
+                  </button>
+                  <button
+                    onClick={() => performReject(true)}
+                    disabled={updatingStatus}
+                    className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 font-semibold"
+                  >
+                    {updatingStatus ? 'Processing...' : 'Reject & Flag'}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => performReject(false)}
+                  disabled={updatingStatus}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-semibold"
+                >
+                  {updatingStatus ? 'Processing...' : 'Reject & Blacklist'}
+                </button>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Reject Confirmation Modal for Flagged Users (Legacy - keeping for safety) */}
+      {showRejectConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full"
+          >
+            <div className="flex items-center space-x-3 mb-4">
+              <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />
+              <h3 className="text-lg font-bold text-gray-900">Confirm Rejection</h3>
+            </div>
+            <p className="text-gray-700 mb-6">
+              This user is flagged. Rejecting this ticket will move them to blacklist. Are you sure you want to continue?
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowRejectConfirm(false)}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => performReject(false)}
+                disabled={updatingStatus}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-semibold"
+              >
+                {updatingStatus ? 'Processing...' : 'Reject & Blacklist'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

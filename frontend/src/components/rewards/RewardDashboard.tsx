@@ -116,10 +116,19 @@ const RewardDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 text-white rounded-3xl shadow-xl p-8 overflow-hidden"
+        >
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold font-poppins">🏆 Reward Dashboard</h1>
+          </div>
+        </motion.div>
+        <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+              <div key={i} className="h-32 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -135,20 +144,28 @@ const RewardDashboard: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-xl shadow-sm p-6 text-white"
+        className="relative bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 rounded-3xl shadow-xl p-8 overflow-hidden text-white"
       >
-        <div className="flex justify-between items-center">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+        <div className="relative z-10 flex justify-between items-center">
           <div>
             <div className="flex items-center space-x-4">
               <h1 className="text-3xl font-bold font-poppins">🏆 Reward Dashboard</h1>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 180 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={fetchDashboardData}
                 disabled={loading}
-                className="p-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors disabled:opacity-50"
+                className="p-2 rounded-xl bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 disabled:opacity-50 shadow-lg"
                 title="Refresh data"
               >
                 <ArrowPathIcon className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
-              </button>
+              </motion.button>
             </div>
             <p className="mt-2 opacity-90">Track your progress and achievements</p>
             <div className="mt-4 flex items-center space-x-4">
@@ -179,15 +196,17 @@ const RewardDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Available Points</p>
-              <p className="text-2xl font-bold text-green-600">{userPoints}</p>
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex flex-col items-center text-center gap-2">
+            <div className="p-3 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl shadow-lg shadow-emerald-500/30">
+              <GiftIcon className="h-6 w-6 text-white" />
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <GiftIcon className="h-6 w-6 text-green-600" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Available Points</p>
+              <p className="text-2xl font-bold text-gray-900">{userPoints}</p>
             </div>
           </div>
         </motion.div>
@@ -196,15 +215,17 @@ const RewardDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Tickets Resolved</p>
-              <p className="text-2xl font-bold text-blue-600">{stats?.ticketsResolved || 0}</p>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex flex-col items-center text-center gap-2">
+            <div className="p-3 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/30">
+              <TrophyIcon className="h-6 w-6 text-white" />
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <TrophyIcon className="h-6 w-6 text-blue-600" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Tickets Resolved</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.ticketsResolved || 0}</p>
             </div>
           </div>
         </motion.div>
@@ -213,15 +234,17 @@ const RewardDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Vouchers Redeemed</p>
-              <p className="text-2xl font-bold text-purple-600">{stats?.vouchersRedeemed || 0}</p>
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex flex-col items-center text-center gap-2">
+            <div className="p-3 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl shadow-lg shadow-purple-500/30">
+              <StarIcon className="h-6 w-6 text-white" />
             </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <StarIcon className="h-6 w-6 text-purple-600" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Vouchers Redeemed</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.vouchersRedeemed || 0}</p>
             </div>
           </div>
         </motion.div>
@@ -230,15 +253,17 @@ const RewardDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          whileHover={{ scale: 1.05, y: -4 }}
+          className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-white/20 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Next Milestone</p>
-              <p className="text-2xl font-bold text-orange-600">{stats?.nextMilestone || 100}</p>
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex flex-col items-center text-center gap-2">
+            <div className="p-3 bg-gradient-to-br from-orange-400 to-red-600 rounded-2xl shadow-lg shadow-orange-500/30">
+              <FireIcon className="h-6 w-6 text-white" />
             </div>
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <FireIcon className="h-6 w-6 text-orange-600" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Next Milestone</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.nextMilestone || 100}</p>
             </div>
           </div>
         </motion.div>

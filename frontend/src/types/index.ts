@@ -7,6 +7,10 @@ export interface User {
   supabaseUserId?: string;
   createdAt?: string;
   updatedAt?: string;
+  isFlagged?: boolean;
+  isBlacklisted?: boolean;
+  flaggedAt?: string;
+  blacklistedAt?: string;
 }
 
 export enum UserRole {
@@ -37,6 +41,8 @@ export interface Ticket {
   isDuplicate?: boolean;
   parentTicketId?: string;
   duplicateTickets?: Ticket[];
+  userIsFlagged?: boolean;
+  userIsBlacklisted?: boolean;
 }
 
 export enum TicketCategory {

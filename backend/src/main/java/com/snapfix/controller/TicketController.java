@@ -10,6 +10,7 @@ import com.snapfix.entity.TicketCategory;
 import com.snapfix.entity.TicketComment;
 import com.snapfix.entity.User;
 import com.snapfix.service.TicketService;
+import com.snapfix.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +33,9 @@ public class TicketController {
     
     @Autowired
     private TicketService ticketService;
+    
+    @Autowired
+    private UserService userService;
     
     @PostMapping("/check-duplicate")
     public ResponseEntity<DuplicateCheckResponse> checkDuplicate(
@@ -76,6 +80,11 @@ public class TicketController {
         }
         
         User currentUser = (User) authentication.getPrincipal();
+        
+        // Check if user is blacklisted before creating ticket
+        if (currentUser.getIsBlacklisted() != null && currentUser.getIsBlacklisted()) {
+            return ResponseEntity.status(403).body(null);
+        }
         
         // If parentTicketId is provided, create as duplicate
         if (parentTicketId != null && !parentTicketId.isEmpty()) {

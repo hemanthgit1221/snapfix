@@ -118,6 +118,10 @@ public class UserService {
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
         response.setPoints(user.getPoints());
+        response.setIsFlagged(user.getIsFlagged());
+        response.setIsBlacklisted(user.getIsBlacklisted());
+        response.setFlaggedAt(user.getFlaggedAt());
+        response.setBlacklistedAt(user.getBlacklistedAt());
         return response;
     }
     
@@ -128,6 +132,10 @@ public class UserService {
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
         response.setPoints(user.getPoints());
+        response.setIsFlagged(user.getIsFlagged());
+        response.setIsBlacklisted(user.getIsBlacklisted());
+        response.setFlaggedAt(user.getFlaggedAt());
+        response.setBlacklistedAt(user.getBlacklistedAt());
         
         // Calculate assigned ticket count for staff members (including all active statuses)
         long assignedTicketCount = ticketRepository.countByAssignedToAndStatusIn(
@@ -137,5 +145,63 @@ public class UserService {
         response.setAssignedTickets((int) assignedTicketCount);
         
         return response;
+    }
+    
+    public void flagUser(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+        
+        User user = userOpt.get();
+        user.setIsFlagged(true);
+        user.setFlaggedAt(java.time.LocalDateTime.now());
+        userRepository.save(user);
+    }
+    
+    public void unflagUser(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+        
+        User user = userOpt.get();
+        user.setIsFlagged(false);
+        user.setFlaggedAt(null);
+        userRepository.save(user);
+    }
+    
+    public void blacklistUser(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+        
+        User user = userOpt.get();
+        user.setIsBlacklisted(true);
+        user.setBlacklistedAt(java.time.LocalDateTime.now());
+        userRepository.save(user);
+    }
+    
+    public void unblacklistUser(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+        
+        User user = userOpt.get();
+        user.setIsBlacklisted(false);
+        user.setBlacklistedAt(null);
+        userRepository.save(user);
+    }
+    
+    public boolean isUserBlacklisted(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return false;
+        }
+        
+        User user = userOpt.get();
+        return user.getIsBlacklisted() != null && user.getIsBlacklisted();
     }
 }

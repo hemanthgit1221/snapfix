@@ -12,6 +12,10 @@ public class UserResponse {
     private Integer points;
     private Integer assignedTickets;
     private LocalDateTime createdAt;
+    private Boolean isFlagged;
+    private Boolean isBlacklisted;
+    private LocalDateTime flaggedAt;
+    private LocalDateTime blacklistedAt;
     
     // Constructors
     public UserResponse() {}
@@ -89,5 +93,37 @@ public class UserResponse {
     
     public void setAssignedTickets(Integer assignedTickets) {
         this.assignedTickets = assignedTickets;
+    }
+    
+    public Boolean getIsFlagged() {
+        return isFlagged;
+    }
+    
+    public void setIsFlagged(Boolean isFlagged) {
+        this.isFlagged = isFlagged;
+    }
+    
+    public Boolean getIsBlacklisted() {
+        return isBlacklisted;
+    }
+    
+    public void setIsBlacklisted(Boolean isBlacklisted) {
+        this.isBlacklisted = isBlacklisted;
+    }
+    
+    public LocalDateTime getFlaggedAt() {
+        return flaggedAt;
+    }
+    
+    public void setFlaggedAt(LocalDateTime flaggedAt) {
+        this.flaggedAt = flaggedAt;
+    }
+    
+    public LocalDateTime getBlacklistedAt() {
+        return blacklistedAt;
+    }
+    
+    public void setBlacklistedAt(LocalDateTime blacklistedAt) {
+        this.blacklistedAt = blacklistedAt;
     }
 }
