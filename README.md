@@ -1,114 +1,140 @@
-# SnapFix - College Issue Reporting & Maintenance Web App
+<p align="center">
+  <img src="docs/screenshots/logo.png" alt="SnapFix" width="280" />
+</p>
 
-A smart maintenance and issue reporting platform for students, faculty, and college management with gamified rewards system.
+<h1 align="center">SnapFix</h1>
 
-## 🎯 Objective
+<p align="center">
+  <strong>Report campus issues. Track fixes. Earn rewards.</strong><br/>
+  A full-stack college issue reporting and maintenance management platform.
+</p>
 
-Create a comprehensive platform where:
-- Students/Faculty can report infrastructure issues with photos
-- Management can track, assign, and analyze tickets
-- Department staff can update ticket progress
-- Users earn rewards for resolving tickets
+<p align="center">
+  <a href="#project-overview">Overview</a> •
+  <a href="#repository-layout">Layout</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#features">Features</a> •
+  <a href="#screenshots">Screenshots</a> •
+  <a href="#license">License</a>
+</p>
 
-## 🛠 Tech Stack
+---
 
-### Backend
-- **Framework**: Java Spring Boot (REST APIs)
-- **Database & Auth**: Supabase
-- **File Storage**: Supabase Storage
-- **Notifications**: JavaMail API
+## Project overview
 
-### Frontend
-- **Framework**: React.js
-- **Styling**: TailwindCSS
-- **Charts**: Chart.js / Recharts
-- **Animations**: Framer Motion
-- **Icons**: Minimal line icons
+**SnapFix** is a centralized hub where students, faculty, staff, and administrators collaborate to report infrastructure problems, track maintenance tickets, and resolve campus issues efficiently.
 
-## 👥 User Roles
+**Problem:** Traditional college maintenance relies on phone calls, informal messages, and paper trails — requests get lost, staff lack accountability, and leadership has no visibility into patterns or response times.
 
-| Role | Permissions |
+**Solution:** SnapFix provides digital issue reporting with photos, role-based dashboards, automated workflows, duplicate-ticket detection, email notifications, and a gamified points-and-voucher reward system to drive student engagement.
+
+| Role | Primary use |
 |------|-------------|
-| **Student/Faculty** | Raise issues, track tickets, earn reward points |
-| **Department Staff** | View assigned tickets, update status, add notes |
-| **Admin/Department Head** | Manage all tickets, analytics dashboard, assign tickets |
+| **Students & faculty** | Report issues, track progress, redeem rewards |
+| **Staff** | Manage assigned tickets, update status |
+| **Administrators** | Assign tickets, analytics, user management |
 
-## 🎫 Ticket System
+---
 
-**Workflow**: `Pending → In Progress → Resolved → Closed`
+## Repository layout
 
-**Fields**:
-- Auto-generated Ticket ID
-- Issue Photo (required)
-- Room Number, Floor, Building
-- Category: Plumbing, Electrical, Housekeeping, AC/Water, Others
-- Short Description
+| Path | Purpose |
+|------|---------|
+| `backend/` | Spring Boot REST API — auth, tickets, rewards, file uploads |
+| `frontend/` | React + TypeScript SPA — role-based dashboards and workflows |
+| `database/` | PostgreSQL schema and migrations |
+| `deployment/` | Docker Compose, Nginx, Kubernetes manifests |
+| `db-dashboard/` | Optional database monitoring UI |
+| `docs/screenshots/` | Product branding and UI captures |
 
-## 🏆 Rewards System
+---
 
-- Earn points for resolved tickets
-- Configurable point values
-- Redeemable vouchers
-- Gamified experience with badges
+## Tech stack
 
-## 🎨 UI/UX Features
+| Layer | Technologies |
+|-------|----------------|
+| **Frontend** | React 19, TypeScript, Tailwind CSS, React Router, Axios, Chart.js, Framer Motion |
+| **Backend** | Java 17, Spring Boot 3, Spring Security, Spring Data JPA, JWT |
+| **Database** | PostgreSQL 15 |
+| **Storage** | Supabase (image uploads) |
+| **Email** | Spring Mail (SMTP notifications) |
+| **DevOps** | Docker, Docker Compose, Nginx, Kubernetes |
 
-- Clean, modern design with soft pastels
-- Card-based layout with rounded corners
-- Smooth animations and transitions
-- Mobile-responsive design
-- Progress bars and status badges
+---
 
-## 📁 Project Structure
+## Architecture
 
-```
-SnapFix_mark2/
-├── backend/                 # Spring Boot REST API
-├── frontend/                # React.js web application
-├── docs/                    # Project documentation
-├── database/                # Database schemas and migrations
-└── deployment/              # Docker and deployment configs
-```
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Java 17+
-- Node.js 18+
-- Supabase account
-
-### Backend Setup
-```bash
-cd backend
-./mvnw spring-boot:run
+```mermaid
+flowchart LR
+  subgraph Client
+    UI[React SPA]
+  end
+  subgraph API
+    GW[Nginx]
+    BE[Spring Boot API]
+  end
+  subgraph Data
+    PG[(PostgreSQL)]
+    ST[Supabase Storage]
+  end
+  UI --> GW --> BE
+  BE --> PG
+  BE --> ST
 ```
 
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm start
-```
+### Request flow (simplified)
 
-## 📊 Features
+| Step | Flow |
+|------|------|
+| **Auth** | Login → JWT issued → protected routes by role |
+| **Ticket** | Student submits issue + photo → duplicate check → ticket created → staff notified |
+| **Resolution** | Staff updates status → points awarded → email alerts |
+| **Rewards** | Points accumulated → voucher redemption with QR codes |
 
-- ✅ Role-based authentication
-- ✅ Ticket management system
-- ✅ File upload with image preview
-- ✅ Real-time notifications
-- ✅ Analytics dashboard
-- ✅ Reward points system
-- ✅ Mobile-responsive design
-- ✅ Email notifications
+---
 
-## 🤝 Contributing
+## Features
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### Issue reporting
+- Photo uploads along with category, priority, and location
+- Duplicate / similar-ticket detection before submission
+- Auto-generated ticket IDs and status lifecycle
 
-## 📄 License
+### Role-based access
+- Separate dashboards for student, staff, admin, and department head
+- JWT stateless authentication with Spring Security RBAC
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Maintenance workflow
+- Ticket assignment, comments, and status tracking
+- Analytics dashboard with Chart.js visualizations
+- Email notifications on key events
+
+### Rewards system
+- Points for reporting and resolution milestones
+- Voucher catalog and QR-based redemption
+- Leaderboard and reward statistics
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/logo.png" alt="SnapFix branding" width="320" />
+  <br/>
+  <em>Brand identity — login and app chrome</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/brand-logo.png" alt="SnapFix app icon" width="160" />
+  <br/>
+  <em>App icon / mark</em>
+</p>
+
+> Add `docs/screenshots/login-hero.png` and `docs/screenshots/admin-dashboard.png` for full UI captures on the public mirror.
+
+---
+
+## License
+
+Private / all rights reserved. This repository is a portfolio snapshot; source is not licensed for redistribution or commercial use without permission.
