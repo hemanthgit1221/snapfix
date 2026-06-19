@@ -120,18 +120,46 @@ flowchart LR
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/logo.png" alt="SnapFix branding" width="320" />
+  <img src="docs/screenshots/login-page.png" alt="SnapFix login page" width="720" />
   <br/>
-  <em>Brand identity — login and app chrome</em>
+  <em>Login — role-based access for students, staff, and admins</em>
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/brand-logo.png" alt="SnapFix app icon" width="160" />
+  <img src="docs/screenshots/user-ticket-creation.png" alt="Ticket creation" width="720" />
   <br/>
-  <em>App icon / mark</em>
+  <em>Issue reporting — photo upload, category, and priority</em>
 </p>
 
-> Add `docs/screenshots/login-hero.png` and `docs/screenshots/admin-dashboard.png` for full UI captures on the public mirror.
+<p align="center">
+  <img src="docs/screenshots/staff-panel.png" alt="Staff panel" width="720" />
+  <br/>
+  <em>Staff dashboard — assigned tickets and status updates</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/admin-dashboard.png" alt="Admin dashboard" width="720" />
+  <br/>
+  <em>Admin overview — system metrics and ticket management</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/analytics.png" alt="Analytics dashboard" width="720" />
+  <br/>
+  <em>Analytics — maintenance trends and performance insights</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/reward-dashboard.png" alt="Reward dashboard" width="720" />
+  <br/>
+  <em>Rewards — points, achievements, and leaderboard</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/voucher-center.png" alt="Voucher center" width="720" />
+  <br/>
+  <em>Voucher center — redeem points for campus rewards</em>
+</p>
 
 ---
 
